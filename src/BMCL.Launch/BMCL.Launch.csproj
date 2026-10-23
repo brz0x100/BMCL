@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BMCL.Launch</RootNamespace>
+    <AssemblyName>BMCL.Launch</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../BMCL.Core/BMCL.Core.csproj" />
+    <ProjectReference Include="../BMCL.Auth/BMCL.Auth.csproj" />
+  </ItemGroup>
+</Project>

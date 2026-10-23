@@ -1,0 +1,306 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BMCL.Desktop.ViewModels"
+        xmlns:material="using:CCSWE.Avalonia.Material"
+        xmlns:icons="using:Material.Icons.Avalonia"
+        x:Class="BMCL.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="BMCL"
+        Width="1200"
+        Height="760"
+        MinWidth="980"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Foreground="{DynamicResource OnSurface}">
+  <Window.Resources>
+    <ControlTheme x:Key="CaptionButton" TargetType="Button">
+      <Setter Property="Width" Value="40" />
+      <Setter Property="Height" Value="40" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Panel Background="Transparent">
+            <Border Name="PART_StateLayer"
+                    Background="{DynamicResource OnSurface}"
+                    Opacity="0" />
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+          </Panel>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ Border#PART_StateLayer">
+        <Setter Property="Opacity" Value="0.08" />
+      </Style>
+      <Style Selector="^:pressed /template/ Border#PART_StateLayer">
+        <Setter Property="Opacity" Value="0.12" />
+      </Style>
+    </ControlTheme>
+  </Window.Resources>
+
+  <Window.Styles>
+    <Style Selector="ListBoxItem icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+    <Style Selector="ListBoxItem:disabled icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurface38}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid>
+    <Border x:Name="ShadowBorder"
+            Margin="24"
+            CornerRadius="8"
+            BoxShadow="0 2 4 0 #14000000,0 6 16 0 #1F000000,0 16 40 0 #26000000"
+            IsHitTestVisible="False" />
+    <Border x:Name="RootBorder"
+            Margin="24"
+            Background="Transparent"
+            ZIndex="1">
+      <Grid RowDefinitions="40,*" ColumnDefinitions="80,*,300">
+    <Border x:Name="TopBarBackground"
+            Grid.Row="0"
+            Grid.ColumnSpan="3"
+            Background="{DynamicResource Surface}"
+            CornerRadius="8,8,0,0"
+            ClipToBounds="True">
+      <Panel Background="Transparent">
+        <Border Background="Transparent"
+                PointerPressed="OnTitleBarPointerPressed" />
+      <Grid Margin="16,0,0,0"
+            ColumnDefinitions="Auto,*,Auto"
+            VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <icons:MaterialIcon Kind="Minecraft"
+                              IconSize="20"
+                              Foreground="{DynamicResource Primary}" />
+          <TextBlock Classes="TitleMedium" Text="BMCL" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="4"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,16,0">
+          <Button Classes="Text"
+                  Content="Running Instances"
+                  Height="32"
+                  MinHeight="0"
+                  Padding="12,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="0"
+                    VerticalAlignment="Top">
+          <Button Theme="{StaticResource CaptionButton}"
+                  Click="OnMinimizeClick"
+                  ToolTip.Tip="Minimize">
+            <icons:MaterialIcon Kind="WindowMinimize"
+                                IconSize="14"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+          </Button>
+          <Button Theme="{StaticResource CaptionButton}"
+                  Click="OnMaximizeClick"
+                  ToolTip.Tip="Maximize">
+            <icons:MaterialIcon x:Name="MaximizeIcon"
+                                Kind="WindowMaximize"
+                                IconSize="14"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+          </Button>
+          <Button Theme="{StaticResource CaptionButton}"
+                  Click="OnCloseClick"
+                  ToolTip.Tip="Close">
+            <icons:MaterialIcon Kind="WindowClose"
+                                IconSize="14"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+          </Button>
+        </StackPanel>
+      </Grid>
+        <material:Divider VerticalAlignment="Bottom" />
+      </Panel>
+    </Border>
+
+    <Border x:Name="SidebarBorder"
+            Grid.Row="1"
+            Grid.Column="0"
+            Background="{DynamicResource SurfaceContainerLow}"
+            BorderBrush="{DynamicResource OutlineVariant}"
+            BorderThickness="0,0,1,0"
+            CornerRadius="0,0,0,8">
+      <Grid RowDefinitions="*,Auto">
+        <ListBox Classes="NavigationRail" SelectedIndex="0" VerticalAlignment="Top">
+          <ListBoxItem Tag="Home" ToolTip.Tip="Home">
+            <icons:MaterialIcon Kind="Home" IconSize="20" />
+          </ListBoxItem>
+          <ListBoxItem Tag="Instances" ToolTip.Tip="Instances">
+            <icons:MaterialIcon Kind="ViewDashboard" IconSize="20" />
+          </ListBoxItem>
+          <ListBoxItem Tag="Downloads" ToolTip.Tip="Downloads">
+            <icons:MaterialIcon Kind="Download" IconSize="20" />
+          </ListBoxItem>
+        </ListBox>
+
+        <StackPanel Grid.Row="1"
+                    Margin="0,0,0,14"
+                    Spacing="8"
+                    HorizontalAlignment="Center">
+          <Button Classes="Outlined"
+                  Width="40"
+                  Height="40"
+                  Padding="0"
+                  CornerRadius="20"
+                  Foreground="{DynamicResource OnSurfaceVariant}"
+                  ToolTip.Tip="Toggle theme">
+            <icons:MaterialIcon Kind="MoonAndStars"
+                                IconSize="20"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+          </Button>
+          <Button Classes="Outlined"
+                  Width="40"
+                  Height="40"
+                  Padding="0"
+                  CornerRadius="20"
+                  Foreground="{DynamicResource OnSurfaceVariant}"
+                  ToolTip.Tip="Settings">
+            <icons:MaterialIcon Kind="Cog"
+                                IconSize="20"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1"
+            Grid.Column="1"
+            Padding="28,24"
+            Background="{DynamicResource Surface}">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="HeadlineSmall" Text="Home" />
+          <TextBlock Classes="BodyMedium"
+                     Text="BMCL · Minecraft Launcher"
+                     Foreground="{DynamicResource OnSurfaceVariant}" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Classes="Card Outlined"
+                Margin="0,20,0,0"
+                Padding="28">
+          <StackPanel HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Spacing="10">
+            <icons:MaterialIcon Kind="Minecraft"
+                                IconSize="56"
+                                Foreground="{DynamicResource Primary}" />
+            <TextBlock Classes="TitleMedium"
+                       Text="Content Area"
+                       HorizontalAlignment="Center" />
+            <TextBlock Classes="BodySmall"
+                       Text="Version list and instance content will appear here"
+                       Foreground="{DynamicResource OnSurfaceVariant}"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2"
+                   Classes="LabelSmall"
+                   Margin="2,12,0,0"
+                   Text="{Binding Status}"
+                   Foreground="{DynamicResource OnSurfaceVariant}" />
+      </Grid>
+    </Border>
+
+    <Border x:Name="RightPanelBorder"
+            Grid.Row="1"
+            Grid.Column="2"
+            Background="{DynamicResource SurfaceContainerLow}"
+            BorderBrush="{DynamicResource OutlineVariant}"
+            BorderThickness="1,0,0,0"
+            CornerRadius="0,0,8,0">
+      <Grid Margin="20" RowDefinitions="*,Auto">
+        <Border Classes="Card Outlined"
+                Padding="20"
+                VerticalAlignment="Top">
+          <StackPanel Spacing="16">
+            <Border Width="64"
+                    Height="64"
+                    HorizontalAlignment="Center"
+                    Background="{DynamicResource PrimaryContainer}"
+                    CornerRadius="32">
+              <icons:MaterialIcon Kind="AccountCircle"
+                                  IconSize="34"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Foreground="{DynamicResource OnPrimaryContainer}" />
+            </Border>
+            <StackPanel Spacing="4">
+              <TextBlock Classes="TitleMedium"
+                         Text="Account"
+                         HorizontalAlignment="Center" />
+              <TextBlock Classes="BodySmall"
+                         Text="Not signed in"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
+            <Button Classes="Text"
+                    Content="Manage Account"
+                    HorizontalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <Button Grid.Row="1"
+                Classes="Filled"
+                Height="48"
+                Margin="0,16,0,0"
+                HorizontalAlignment="Stretch">
+          <StackPanel Orientation="Horizontal"
+                      Spacing="8"
+                      HorizontalAlignment="Center">
+            <icons:MaterialIcon Kind="Play"
+                                IconSize="18"
+                                Foreground="{DynamicResource OnPrimary}" />
+            <TextBlock Classes="LabelLarge"
+                       Text="Launch Game"
+                       VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+    </Grid>
+  </Border>
+
+    <Border x:Name="EdgeBorder"
+            Margin="24"
+            CornerRadius="8"
+            BorderThickness="1"
+            BorderBrush="#33808080"
+            RenderOptions.EdgeMode="Antialias"
+            IsHitTestVisible="False"
+            ZIndex="2" />
+
+  <Grid x:Name="ResizeGripLayer"
+        Margin="6"
+        ColumnDefinitions="14,*,14"
+        RowDefinitions="14,*,14">
+    <Border x:Name="ResizeTopLeft" Grid.Row="0" Grid.Column="0" Background="Transparent" Tag="TopLeft" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeTop" Grid.Row="0" Grid.Column="1" Background="Transparent" Tag="Top" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeTopRight" Grid.Row="0" Grid.Column="2" Background="Transparent" Tag="TopRight" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeLeft" Grid.Row="1" Grid.Column="0" Background="Transparent" Tag="Left" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeRight" Grid.Row="1" Grid.Column="2" Background="Transparent" Tag="Right" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeBottomLeft" Grid.Row="2" Grid.Column="0" Background="Transparent" Tag="BottomLeft" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeBottom" Grid.Row="2" Grid.Column="1" Background="Transparent" Tag="Bottom" PointerPressed="OnResizePressed" />
+    <Border x:Name="ResizeBottomRight" Grid.Row="2" Grid.Column="2" Background="Transparent" Tag="BottomRight" PointerPressed="OnResizePressed" />
+  </Grid>
+</Grid>
+</Window>

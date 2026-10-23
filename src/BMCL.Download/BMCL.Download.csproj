@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BMCL.Download</RootNamespace>
+    <AssemblyName>BMCL.Download</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../BMCL.Core/BMCL.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BMCL.Core</RootNamespace>
+    <AssemblyName>BMCL.Core</AssemblyName>
+  </PropertyGroup>
+</Project>

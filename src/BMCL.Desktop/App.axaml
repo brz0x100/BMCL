@@ -1,0 +1,11 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:theme="using:CCSWE.Avalonia.Material"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="BMCL.Desktop.App"
+             RequestedThemeVariant="Default">
+  <Application.Styles>
+    <theme:MaterialTheme />
+    <icons:MaterialIconStyles />
+  </Application.Styles>
+</Application>
