@@ -43,18 +43,31 @@ public sealed class MinecraftInstallerTests : IDisposable
         var progress = new List<InstallProgress>();
         var instance = await installer.InstallAsync(
             "test-version",
+            "My Test Instance",
+            IsolationStrategy.Always,
             new Progress<InstallProgress>(progress.Add));
 
         Assert.Equal("test-version", instance.Id);
         Assert.Equal("test-version", instance.VersionId);
-        Assert.True(File.Exists(Path.Combine(paths.Instances, instance.Id, "instance.json")));
+        Assert.Equal("My Test Instance", instance.Name);
+        Assert.True(instance.Isolated);
+        Assert.True(File.Exists(Path.Combine(paths.Versions, instance.Id, "instance.json")));
         Assert.True(File.Exists(Path.Combine(paths.Versions, "test-version", "test-version.jar")));
         Assert.True(File.Exists(Path.Combine(paths.Libraries, "org/example/demo/1.0/demo-1.0.jar")));
-        Assert.True(File.Exists(Path.Combine(paths.Instances, instance.Id, "natives", "native.txt")));
+        Assert.True(File.Exists(Path.Combine(paths.Versions, instance.Id, "natives", "native.txt")));
         Assert.True(File.Exists(Path.Combine(paths.Assets, "indexes", "test-index.json")));
         Assert.True(File.Exists(Path.Combine(paths.Assets, "objects", "00", new string('0', 40))));
         Assert.True(File.Exists(Path.Combine(paths.Assets, "log_configs", "client.xml")));
         Assert.NotEmpty(progress);
+
+        var shared = await installer.InstallAsync(
+            "test-version",
+            "Shared Instance",
+            IsolationStrategy.Never,
+            new Progress<InstallProgress>(_ => { }));
+
+        Assert.False(shared.Isolated);
+        Assert.True(File.Exists(Path.Combine(paths.MinecraftRoot, "natives", "native.txt")));
     }
 
     public void Dispose()
@@ -159,6 +172,11 @@ public sealed class MinecraftInstallerTests : IDisposable
         {
             foreach (var item in items)
             {
+                if (File.Exists(item.Destination))
+                {
+                    continue;
+                }
+
                 var directory = Path.GetDirectoryName(item.Destination)!;
                 Directory.CreateDirectory(directory);
 

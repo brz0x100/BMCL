@@ -25,13 +25,14 @@ public sealed class InstanceStoreTests : IDisposable
             LastPlayedAt = DateTimeOffset.UtcNow,
             JavaPath = "/usr/lib/jvm/java-21/bin/java",
             MemoryMb = 4096,
+            Isolated = false,
         };
 
         await store.SaveAsync(instance);
         var loaded = Assert.Single(await store.LoadAsync());
 
         Assert.Equal(instance, loaded);
-        Assert.True(File.Exists(Path.Combine(paths.Instances, "survival", "instance.json")));
+        Assert.True(File.Exists(Path.Combine(paths.Versions, "survival", "instance.json")));
     }
 
     [Fact]
@@ -60,6 +61,26 @@ public sealed class InstanceStoreTests : IDisposable
         var loaded = await store.LoadAsync();
 
         Assert.Equal(["newer", "older"], loaded.Select(instance => instance.Id));
+    }
+
+    [Fact]
+    public async Task LoadsStandardVersionFolderWithoutMetadata()
+    {
+        var paths = new LauncherPaths(_root);
+        var versionDirectory = Path.Combine(paths.Versions, "1.20.1");
+        Directory.CreateDirectory(versionDirectory);
+        await File.WriteAllTextAsync(
+            Path.Combine(versionDirectory, "1.20.1.json"),
+            """{"id":"1.20.1"}""");
+        await File.WriteAllTextAsync(
+            Path.Combine(versionDirectory, "options.txt"),
+            "fov:0");
+
+        var loaded = Assert.Single(await new InstanceStore(paths).LoadAsync());
+
+        Assert.Equal("1.20.1", loaded.Id);
+        Assert.Equal("1.20.1", loaded.VersionId);
+        Assert.True(loaded.Isolated);
     }
 
     [Fact]

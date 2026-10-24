@@ -56,6 +56,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
     private int _selectedThemeIndex;
 
     [ObservableProperty]
+    private int _selectedIsolationStrategyIndex = 1;
+
+    [ObservableProperty]
     private string _status = "Settings loaded";
 
     partial void OnSelectedNavigationIndexChanged(int value)
@@ -99,6 +102,12 @@ public sealed partial class SettingsViewModel : ViewModelBase
                 2 => LauncherTheme.Dark,
                 _ => LauncherTheme.System,
             },
+            DefaultIsolationStrategy = SelectedIsolationStrategyIndex switch
+            {
+                0 => IsolationStrategy.Always,
+                2 => IsolationStrategy.Never,
+                _ => IsolationStrategy.Modded,
+            },
         };
 
         try
@@ -124,6 +133,12 @@ public sealed partial class SettingsViewModel : ViewModelBase
             LauncherTheme.Light => 1,
             LauncherTheme.Dark => 2,
             _ => 0,
+        };
+        SelectedIsolationStrategyIndex = settings.DefaultIsolationStrategy switch
+        {
+            IsolationStrategy.Always => 0,
+            IsolationStrategy.Never => 2,
+            _ => 1,
         };
     }
 }

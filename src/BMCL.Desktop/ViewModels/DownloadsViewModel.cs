@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using BMCL.Core.Minecraft;
+using BMCL.Desktop.Services;
 using BMCL.Download;
 using BMCL.Install;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,16 +14,19 @@ public sealed partial class DownloadsViewModel : ViewModelBase
     private readonly MinecraftVersionService _versionService;
     private readonly MinecraftInstaller _installer;
     private readonly InstancesViewModel _instances;
+    private readonly LauncherSettingsService _settings;
     private readonly List<VersionSummary> _allVersions = [];
 
     public DownloadsViewModel(
         MinecraftVersionService versionService,
         MinecraftInstaller installer,
-        InstancesViewModel instances)
+        InstancesViewModel instances,
+        LauncherSettingsService settings)
     {
         _versionService = versionService;
         _installer = installer;
         _instances = instances;
+        _settings = settings;
     }
 
     public ObservableCollection<VersionSummary> Versions { get; } = new();
@@ -31,13 +35,10 @@ public sealed partial class DownloadsViewModel : ViewModelBase
     private VersionSummary? _selectedVersion;
 
     [ObservableProperty]
-    private bool _isInstalling;
-
-    [ObservableProperty]
-    private double _installProgress;
-
-    [ObservableProperty]
     private string _searchText = "";
+
+    [ObservableProperty]
+    private int _selectedTypeIndex = 1;
 
     [ObservableProperty]
     private string _status = "Version list not loaded";
@@ -71,7 +72,8 @@ public sealed partial class DownloadsViewModel : ViewModelBase
         ? Status
         : $"{SelectedTabLabel} browsing will be added in a later milestone.";
 
-    public bool CanInstall => !IsInstalling && SelectedVersion is not null && IsGamesSelected;
+    public VersionInstallViewModel CreateInstallViewModel(VersionSummary version) =>
+        new(_installer, _instances, _settings, version);
 
     public async Task LoadAsync(
         bool forceRefresh = false,
@@ -117,6 +119,8 @@ public sealed partial class DownloadsViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
+    partial void OnSelectedTypeIndexChanged(int value) => ApplyFilter();
+
     partial void OnStatusChanged(string value) => OnPropertyChanged(nameof(PageStatus));
 
     partial void OnSelectedSectionIndexChanged(int value) => NotifyTabState();
@@ -132,55 +136,6 @@ public sealed partial class DownloadsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsGamesSelected));
         OnPropertyChanged(nameof(SelectedTabLabel));
         OnPropertyChanged(nameof(PageStatus));
-        OnPropertyChanged(nameof(CanInstall));
-    }
-
-    partial void OnSelectedVersionChanged(VersionSummary? value) =>
-        OnPropertyChanged(nameof(CanInstall));
-
-    partial void OnIsInstallingChanged(bool value) =>
-        OnPropertyChanged(nameof(CanInstall));
-
-    [RelayCommand]
-    private async Task InstallSelectedAsync(CancellationToken cancellationToken)
-    {
-        if (!CanInstall || SelectedVersion is not { } version)
-        {
-            return;
-        }
-
-        IsInstalling = true;
-        InstallProgress = 0;
-        Status = $"Preparing Minecraft {version.Id}...";
-
-        try
-        {
-            var progress = new Progress<InstallProgress>(update =>
-            {
-                Status = update.Stage;
-                InstallProgress = update.Percent;
-            });
-
-            var instance = await _installer.InstallAsync(version.Id, progress, cancellationToken);
-            await _instances.LoadAsync(cancellationToken);
-            _instances.SelectedInstance = _instances.Instances.FirstOrDefault(
-                candidate => string.Equals(candidate.Id, instance.Id, StringComparison.Ordinal));
-
-            InstallProgress = 100;
-            Status = $"Installed {instance.Name}. Select it on Home to launch.";
-        }
-        catch (OperationCanceledException)
-        {
-            Status = "Installation canceled.";
-        }
-        catch (Exception exception)
-        {
-            Status = $"Installation failed: {exception.Message}";
-        }
-        finally
-        {
-            IsInstalling = false;
-        }
     }
 
     private void ApplyFilter()
@@ -190,9 +145,10 @@ public sealed partial class DownloadsViewModel : ViewModelBase
         Versions.Clear();
         foreach (var version in _allVersions)
         {
-            if (query.Length == 0 ||
-                version.Id.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                version.Type.Contains(query, StringComparison.OrdinalIgnoreCase))
+            var matchesSearch = query.Length == 0 ||
+                                version.Id.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                                version.Type.Contains(query, StringComparison.OrdinalIgnoreCase);
+            if (matchesSearch && MatchesType(version, SelectedTypeIndex))
             {
                 Versions.Add(version);
             }
@@ -200,4 +156,24 @@ public sealed partial class DownloadsViewModel : ViewModelBase
 
         Status = $"{Versions.Count} of {_allVersions.Count} versions";
     }
+
+    private static bool MatchesType(VersionSummary version, int typeIndex) => typeIndex switch
+    {
+        0 => true,
+        1 => string.Equals(version.Type, "release", StringComparison.OrdinalIgnoreCase) &&
+             !IsAprilFools(version),
+        2 => string.Equals(version.Type, "snapshot", StringComparison.OrdinalIgnoreCase) &&
+             !IsAprilFools(version),
+        3 => IsAprilFools(version),
+        4 => string.Equals(version.Type, "old_alpha", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(version.Type, "old_beta", StringComparison.OrdinalIgnoreCase),
+        _ => true,
+    };
+
+    private static bool IsAprilFools(VersionSummary version) =>
+        string.Equals(version.Id, "2.0", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(version.Id, "1.RV-Pre1", StringComparison.OrdinalIgnoreCase) ||
+        (string.Equals(version.Type, "snapshot", StringComparison.OrdinalIgnoreCase) &&
+         version.ReleaseTime.Month == 4 &&
+         version.ReleaseTime.Day == 1);
 }

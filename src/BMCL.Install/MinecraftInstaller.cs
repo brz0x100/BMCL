@@ -31,8 +31,21 @@ public sealed class MinecraftInstaller
         _instances = instances;
     }
 
+    public Task<Instance> InstallAsync(
+        string versionId,
+        IProgress<InstallProgress>? progress = null,
+        CancellationToken cancellationToken = default) =>
+        InstallAsync(
+            versionId,
+            instanceName: null,
+            IsolationStrategy.Always,
+            progress,
+            cancellationToken);
+
     public async Task<Instance> InstallAsync(
         string versionId,
+        string? instanceName,
+        IsolationStrategy isolationStrategy,
         IProgress<InstallProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -41,6 +54,7 @@ public sealed class MinecraftInstaller
         progress?.Report(new InstallProgress("Resolving version"));
         var version = await _versions.GetVersionAsync(versionId, cancellationToken: cancellationToken);
         var context = RuleContext.Current;
+        var isolated = ShouldIsolate(isolationStrategy, version, versionId);
 
         Directory.CreateDirectory(_paths.Versions);
         Directory.CreateDirectory(_paths.Libraries);
@@ -61,7 +75,10 @@ public sealed class MinecraftInstaller
             throw new IOException("The logging configuration was not downloaded.");
         }
 
-        var instanceDirectory = Path.Combine(_paths.Instances, versionId);
+        var instanceDirectory = isolated
+            ? Path.Combine(_paths.Versions, versionId)
+            : _paths.MinecraftRoot;
+        Directory.CreateDirectory(instanceDirectory);
         var nativesDirectory = Path.Combine(instanceDirectory, "natives");
         progress?.Report(new InstallProgress("Extracting native libraries"));
         NativesExtractor.Extract(
@@ -70,7 +87,11 @@ public sealed class MinecraftInstaller
             _paths.Libraries,
             nativesDirectory);
 
-        var instance = await CreateInstanceAsync(versionId, cancellationToken);
+        var instance = await CreateInstanceAsync(
+            versionId,
+            instanceName,
+            isolated,
+            cancellationToken);
         progress?.Report(new InstallProgress("Installation complete", 1, 1));
         return instance;
     }
@@ -213,8 +234,13 @@ public sealed class MinecraftInstaller
 
     private async Task<Instance> CreateInstanceAsync(
         string versionId,
+        string? instanceName,
+        bool isolated,
         CancellationToken cancellationToken)
     {
+        var name = string.IsNullOrWhiteSpace(instanceName)
+            ? versionId
+            : instanceName.Trim();
         var existing = (await _instances.LoadAsync(cancellationToken))
             .FirstOrDefault(instance => string.Equals(instance.Id, versionId, StringComparison.Ordinal));
 
@@ -222,14 +248,52 @@ public sealed class MinecraftInstaller
             ? new Instance
             {
                 Id = versionId,
-                Name = versionId,
+                Name = name,
                 VersionId = versionId,
             }
-            : existing with { VersionId = versionId };
+            : existing with
+            {
+                Name = name,
+                VersionId = versionId,
+                Isolated = isolated,
+            };
 
-        Directory.CreateDirectory(Path.Combine(_paths.Instances, instance.Id));
+        Directory.CreateDirectory(Path.Combine(_paths.Versions, instance.Id));
         await _instances.SaveAsync(instance, cancellationToken);
         return instance;
+    }
+
+    private static bool ShouldIsolate(
+        IsolationStrategy strategy,
+        VersionDetail version,
+        string versionId) => strategy switch
+    {
+        IsolationStrategy.Always => true,
+        IsolationStrategy.Never => false,
+        _ => IsModdedVersion(version, versionId),
+    };
+
+    private static bool IsModdedVersion(VersionDetail version, string versionId)
+    {
+        if (!string.IsNullOrWhiteSpace(version.InheritsFrom))
+        {
+            return true;
+        }
+
+        return ContainsLoader(versionId) ||
+               version.Libraries.Any(library => ContainsLoader(library.Name));
+    }
+
+    private static bool ContainsLoader(string value)
+    {
+        var lower = value.ToLowerInvariant();
+        return lower.Contains("forge", StringComparison.Ordinal) ||
+               lower.Contains("fabric", StringComparison.Ordinal) ||
+               lower.Contains("quilt", StringComparison.Ordinal) ||
+               lower.Contains("neoforge", StringComparison.Ordinal) ||
+               lower.Contains("optifine", StringComparison.Ordinal) ||
+               lower.Contains("liteloader", StringComparison.Ordinal) ||
+               lower.Contains("cleanroom", StringComparison.Ordinal);
     }
 
     private async Task DownloadAsync(

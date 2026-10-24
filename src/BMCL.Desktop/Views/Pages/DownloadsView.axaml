@@ -88,23 +88,19 @@
   </UserControl.Styles>
 
   <Border Background="Transparent" Padding="28,24">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Spacing="4">
           <TextBlock Classes="HeadlineSmall" Text="Downloads" />
           <TextBlock Classes="BodyMedium"
                      Text="Browse games and addons. Content for each category will arrive in later milestones."
-                     Foreground="{DynamicResource OnSurfaceVariant}" />
+                     Foreground="{DynamicResource OnSurfaceVariant}"
+                     TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel Grid.Column="1"
                     Orientation="Horizontal"
                     Spacing="8"
                     VerticalAlignment="Center">
-          <Button Classes="Filled"
-                  Content="Install"
-                  Command="{Binding InstallSelectedCommand}"
-                  IsEnabled="{Binding CanInstall}"
-                  ToolTip.Tip="Select a game version to install." />
           <Button Classes="Text"
                   Content="Refresh"
                   Command="{Binding RefreshCommand}" />
@@ -130,7 +126,7 @@
             </ListBoxItem>
             <ListBoxItem>
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <icons:MaterialIcon Kind="Puzzle" IconSize="16" />
+                <icons:MaterialIcon Kind="Tools" IconSize="16" />
                 <TextBlock Text="Addons" />
               </StackPanel>
             </ListBoxItem>
@@ -163,13 +159,13 @@
                    SelectedIndex="{Binding SelectedAddonsTabIndex, Mode=TwoWay}">
             <ListBoxItem>
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:MaterialIcon Kind="Package" IconSize="14" />
+                <icons:MaterialIcon Kind="Puzzle" IconSize="14" />
                 <TextBlock Text="Mods" />
               </StackPanel>
             </ListBoxItem>
             <ListBoxItem>
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:MaterialIcon Kind="Palette" IconSize="14" />
+                <icons:MaterialIcon Kind="Texture" IconSize="14" />
                 <TextBlock Text="Resource Packs" />
               </StackPanel>
             </ListBoxItem>
@@ -181,7 +177,7 @@
             </ListBoxItem>
             <ListBoxItem>
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:MaterialIcon Kind="Terrain" IconSize="14" />
+                <icons:MaterialIcon Kind="Earth" IconSize="14" />
                 <TextBlock Text="Worlds" />
               </StackPanel>
             </ListBoxItem>
@@ -189,45 +185,75 @@
         </Grid>
       </Grid>
 
-      <TextBox Grid.Row="2"
-               Classes="Outlined"
-               Margin="0,16,0,0"
-               PlaceholderText="Search versions"
-               IsEnabled="{Binding IsGamesSelected}"
-               Text="{Binding SearchText, Mode=TwoWay}" />
+      <Grid Grid.Row="2"
+            Margin="0,16,0,0"
+            ColumnDefinitions="*,Auto">
+        <TextBox Classes="Outlined"
+                 PlaceholderText="Search versions"
+                 IsEnabled="{Binding IsGamesSelected}"
+                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center">
+          <TextBlock Classes="LabelMedium"
+                     Text="Type"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource OnSurfaceVariant}" />
+          <ComboBox Width="150"
+                    SelectedIndex="{Binding SelectedTypeIndex, Mode=TwoWay}"
+                    IsEnabled="{Binding IsGamesSelected}"
+                    ToolTip.Tip="Filter versions by type">
+            <ComboBoxItem Content="All" />
+            <ComboBoxItem Content="Release" />
+            <ComboBoxItem Content="Snapshots" />
+            <ComboBoxItem Content="April Fools" />
+            <ComboBoxItem Content="Historical" />
+          </ComboBox>
+        </StackPanel>
+      </Grid>
 
-      <ProgressBar Grid.Row="3"
-                   Height="4"
-                   Margin="0,12,0,0"
-                   Minimum="0"
-                   Maximum="100"
-                   Value="{Binding InstallProgress}"
-                   Foreground="{DynamicResource Primary}"
-                   IsVisible="{Binding IsInstalling}" />
-
-      <Border Grid.Row="4"
+      <Border Grid.Row="3"
               Classes="Card Outlined"
               Margin="0,16,0,0"
               Padding="8"
               IsVisible="{Binding IsGamesSelected}">
         <ListBox ItemsSource="{Binding Versions}"
-                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}">
+                 SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                 DoubleTapped="OnVersionDoubleTapped">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="minecraft:VersionSummary">
-              <Grid ColumnDefinitions="*,Auto" Margin="8,6">
-                <TextBlock Classes="TitleSmall" Text="{Binding Id}" />
+              <Grid ColumnDefinitions="*,Auto,Auto" Margin="8,6">
+                <TextBlock Classes="TitleSmall"
+                           Text="{Binding Id}"
+                           VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1"
                            Classes="LabelSmall"
                            Text="{Binding Type}"
                            Foreground="{DynamicResource OnSurfaceVariant}"
                            VerticalAlignment="Center" />
+                <Button Grid.Column="2"
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        Margin="8,0,0,0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip.Tip="Version details"
+                        Click="OnVersionArrowClick">
+                  <icons:MaterialIcon Kind="ChevronRight"
+                                      IconSize="18"
+                                      Foreground="{DynamicResource OnSurfaceVariant}" />
+                </Button>
               </Grid>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
       </Border>
 
-      <Border Grid.Row="4"
+      <Border Grid.Row="3"
               Classes="Card Outlined"
               Margin="0,16,0,0"
               Padding="32"
@@ -249,7 +275,7 @@
         </StackPanel>
       </Border>
 
-      <TextBlock Grid.Row="5"
+      <TextBlock Grid.Row="4"
                  Classes="LabelSmall"
                  Margin="2,12,0,0"
                  Text="{Binding PageStatus}"

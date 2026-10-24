@@ -64,7 +64,7 @@ public sealed class GameLaunchService
         }
 
         var javaPath = await ResolveJavaAsync(instance, version, cancellationToken);
-        var gameDirectory = Path.Combine(_paths.Instances, instance.Id);
+        var gameDirectory = _paths.GetInstanceDirectory(instance);
         var nativesDirectory = Path.Combine(gameDirectory, "natives");
         Directory.CreateDirectory(gameDirectory);
         NativesExtractor.Extract(

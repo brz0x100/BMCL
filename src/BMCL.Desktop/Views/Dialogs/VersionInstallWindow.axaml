@@ -1,0 +1,161 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BMCL.Desktop.ViewModels"
+        xmlns:icons="using:Material.Icons.Avalonia"
+        x:Class="BMCL.Desktop.Views.Dialogs.VersionInstallWindow"
+        x:DataType="vm:VersionInstallViewModel"
+        Title="Install Minecraft"
+        WindowStartupLocation="CenterOwner"
+        WindowDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Foreground="{DynamicResource OnSurface}"
+        CanResize="False"
+        Width="1032"
+        Height="654"
+        ShowInTaskbar="False">
+  <Window.Styles>
+    <Style Selector="Border.LoaderCard">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerLow}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource OutlineVariant}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+
+    <Style Selector="Border.LoaderCard.primary">
+      <Setter Property="BorderBrush" Value="{DynamicResource Primary}" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="24">
+    <Border CornerRadius="8"
+            BoxShadow="0 1 3 0 #2E000000, 0 6 14 0 #4A000000"
+            IsHitTestVisible="False" />
+    <Border Background="{DynamicResource Surface}"
+            BorderBrush="#33808080"
+            BorderThickness="1"
+            CornerRadius="8"
+            ClipToBounds="True">
+      <Panel>
+        <icons:MaterialIcon Kind="Minecraft"
+                            IconSize="560"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,-90,-130"
+                            Opacity="0.035"
+                            Foreground="{DynamicResource Primary}"
+                            IsHitTestVisible="False" />
+
+        <Grid RowDefinitions="Auto,*,Auto">
+          <Border Grid.Row="0"
+                  Background="{DynamicResource SurfaceContainerLow}"
+                  BorderBrush="{DynamicResource OutlineVariant}"
+                  BorderThickness="0,0,0,1"
+                  Padding="20,14">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto"
+                  VerticalAlignment="Center">
+              <TextBlock Classes="LabelMedium"
+                         Text="Instance Name"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource OnSurfaceVariant}" />
+              <TextBox Grid.Column="1"
+                       Classes="Outlined"
+                       Width="240"
+                       Margin="12,0,0,0"
+                       Text="{Binding InstanceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+              <Button Grid.Column="3"
+                      Theme="{StaticResource CaptionButton}"
+                      ToolTip.Tip="Close"
+                      Click="OnCloseClick">
+                <icons:MaterialIcon Kind="WindowClose"
+                                    IconSize="14"
+                                    Foreground="{DynamicResource OnSurfaceVariant}" />
+              </Button>
+            </Grid>
+          </Border>
+
+          <ScrollViewer Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="20" Spacing="4">
+              <TextBlock Classes="HeadlineSmall"
+                         Text="Install Minecraft"
+                         Margin="4,0,0,0" />
+              <TextBlock Classes="BodySmall"
+                         Text="Choose a loader for this instance. Loader support is coming soon."
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         Margin="4,0,0,12" />
+              <ItemsControl ItemsSource="{Binding Loaders}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemWidth="185" ItemHeight="170" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:LoaderOption">
+                    <Border Classes="LoaderCard"
+                            Classes.primary="{Binding IsAvailable}"
+                            Width="175"
+                            Height="160"
+                            Margin="5">
+                      <StackPanel HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Spacing="7"
+                                  Opacity="{Binding Opacity}">
+                        <icons:MaterialIcon Kind="{Binding Icon}"
+                                            IconSize="40"
+                                            Foreground="{DynamicResource OnSurface}" />
+                        <TextBlock Classes="TitleSmall"
+                                   Text="{Binding Name}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Classes="LabelSmall"
+                                   Text="{Binding Description}"
+                                   Foreground="{DynamicResource OnSurfaceVariant}"
+                                   HorizontalAlignment="Center" />
+                        <icons:MaterialIcon Kind="ChevronRight"
+                                            IconSize="20"
+                                            IsVisible="{Binding IsAvailable}"
+                                            Foreground="{DynamicResource Primary}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+
+          <Border Grid.Row="2"
+                  Background="{DynamicResource SurfaceContainerLow}"
+                  BorderBrush="{DynamicResource OutlineVariant}"
+                  BorderThickness="0,1,0,0"
+                  Padding="20,12">
+            <Grid ColumnDefinitions="*,Auto,Auto"
+                  VerticalAlignment="Center">
+              <TextBlock Classes="LabelSmall"
+                         Text="{Binding Status}"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         TextTrimming="CharacterEllipsis"
+                         VerticalAlignment="Center" />
+              <ProgressBar Grid.Column="1"
+                           Width="180"
+                           Height="6"
+                           Margin="16,0,16,0"
+                           Minimum="0"
+                           Maximum="100"
+                           Value="{Binding InstallProgress}"
+                           IsVisible="{Binding IsInstalling}"
+                           Foreground="{DynamicResource Primary}"
+                           VerticalAlignment="Center" />
+              <Button Grid.Column="2"
+                      Classes="Filled"
+                      Content="{Binding InstallButtonText}"
+                      Command="{Binding InstallCommand}"
+                      IsEnabled="{Binding CanInstall}" />
+            </Grid>
+          </Border>
+        </Grid>
+      </Panel>
+    </Border>
+  </Grid>
+</Window>

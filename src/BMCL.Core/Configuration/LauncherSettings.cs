@@ -21,5 +21,7 @@ public sealed record LauncherSettings
 
     public LauncherTheme Theme { get; init; } = LauncherTheme.System;
 
+    public IsolationStrategy DefaultIsolationStrategy { get; init; } = IsolationStrategy.Modded;
+
     public string? SelectedInstanceId { get; init; }
 }

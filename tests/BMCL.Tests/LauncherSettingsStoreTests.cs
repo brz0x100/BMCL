@@ -23,6 +23,7 @@ public sealed class LauncherSettingsStoreTests : IDisposable
             MaxConcurrentDownloads = 12,
             UseBmclApi = true,
             Theme = LauncherTheme.Dark,
+            DefaultIsolationStrategy = IsolationStrategy.Always,
             SelectedInstanceId = "survival",
         };
 
@@ -88,6 +89,7 @@ public sealed class LauncherSettingsStoreTests : IDisposable
         Assert.Equal(8, loaded.MaxConcurrentDownloads);
         Assert.False(loaded.UseBmclApi);
         Assert.Equal(LauncherTheme.System, loaded.Theme);
+        Assert.Equal(IsolationStrategy.Modded, loaded.DefaultIsolationStrategy);
     }
 
     public void Dispose()

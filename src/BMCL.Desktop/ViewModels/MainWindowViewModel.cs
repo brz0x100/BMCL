@@ -5,6 +5,7 @@ using BMCL.Core.Configuration;
 using BMCL.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Material.Icons;
 
 namespace BMCL.Desktop.ViewModels;
 
@@ -76,7 +77,19 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _accounts.SelectedAccount is not null &&
         InstancesPage.SelectedInstance is not null;
 
-    public string LaunchButtonText => IsLaunching ? "Launching..." : "Launch Game";
+    public string LaunchButtonText => IsLaunching ? "Launching..." : "Launch Instance";
+
+    public bool IsRightPanelVisible => IsHomePage || !IsRightPanelCollapsed;
+
+    public bool IsRightPanelToggleVisible => !IsHomePage;
+
+    public MaterialIconKind RightPanelToggleIcon => IsRightPanelCollapsed
+        ? MaterialIconKind.ChevronLeft
+        : MaterialIconKind.ChevronRight;
+
+    public string RightPanelToggleToolTip => IsRightPanelCollapsed
+        ? "Expand sidebar"
+        : "Collapse sidebar";
 
     public bool IsHomePage => CurrentPage == HomePage;
 
@@ -94,6 +107,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isLaunching;
+
+    [ObservableProperty]
+    private bool _isRightPanelCollapsed;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -122,6 +138,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         await DownloadsPage.LoadAsync(cancellationToken: cancellationToken);
 
         Status = warnings.Count == 0 ? "Ready" : string.Join(" | ", warnings);
+    }
+
+    [RelayCommand]
+    private void ToggleRightPanel()
+    {
+        if (!IsHomePage)
+        {
+            IsRightPanelCollapsed = !IsRightPanelCollapsed;
+        }
     }
 
     [RelayCommand]
@@ -164,6 +189,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     partial void OnCurrentPageChanged(ViewModelBase value)
     {
         OnPropertyChanged(nameof(IsHomePage));
+        OnPropertyChanged(nameof(IsRightPanelVisible));
+        OnPropertyChanged(nameof(IsRightPanelToggleVisible));
     }
 
     partial void OnSelectedPageIndexChanged(int value)
@@ -178,6 +205,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     }
 
     partial void OnIsLaunchingChanged(bool value) => NotifyLaunchState();
+
+    partial void OnIsRightPanelCollapsedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsRightPanelVisible));
+        OnPropertyChanged(nameof(RightPanelToggleIcon));
+        OnPropertyChanged(nameof(RightPanelToggleToolTip));
+    }
 
     private void UpdateAccountState()
     {

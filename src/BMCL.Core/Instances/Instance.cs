@@ -8,6 +8,8 @@ public sealed record Instance
 
     public required string VersionId { get; init; }
 
+    public bool Isolated { get; init; } = true;
+
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset? LastPlayedAt { get; init; }

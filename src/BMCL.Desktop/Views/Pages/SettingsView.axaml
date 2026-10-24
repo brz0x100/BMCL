@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BMCL.Desktop.ViewModels"
+             xmlns:material="using:CCSWE.Avalonia.Material"
              x:Class="BMCL.Desktop.Views.Pages.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <Border Background="Transparent" Padding="28,24">
@@ -8,7 +9,7 @@
       <StackPanel Spacing="4">
         <TextBlock Classes="HeadlineSmall" Text="Global Settings" />
         <TextBlock Classes="BodyMedium"
-                   Text="Configure the memory available to Minecraft."
+                   Text="Configure memory and instance isolation."
                    Foreground="{DynamicResource OnSurfaceVariant}" />
       </StackPanel>
 
@@ -34,6 +35,22 @@
                                Increment="256" />
               </StackPanel>
             </Grid>
+
+            <material:Divider />
+
+            <StackPanel Spacing="6">
+              <TextBlock Classes="LabelMedium" Text="Default Isolation Strategy" />
+              <ComboBox HorizontalAlignment="Stretch"
+                        SelectedIndex="{Binding SelectedIsolationStrategyIndex, Mode=TwoWay}">
+                <ComboBoxItem Content="Always" />
+                <ComboBoxItem Content="Modded" />
+                <ComboBoxItem Content="Never" />
+              </ComboBox>
+              <TextBlock Classes="LabelSmall"
+                         Text="Automatically enable instance isolation for eligible instances when installing a new instance."
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
           </StackPanel>
         </Border>
       </ScrollViewer>

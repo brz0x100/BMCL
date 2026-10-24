@@ -20,7 +20,7 @@ public sealed class InstanceStore
 
     public async Task<IReadOnlyList<Instance>> LoadAsync(CancellationToken cancellationToken = default)
     {
-        var root = _paths.Instances;
+        var root = _paths.Versions;
         if (!Directory.Exists(root))
         {
             return [];
@@ -30,28 +30,33 @@ public sealed class InstanceStore
         foreach (var directory in Directory.EnumerateDirectories(root))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var id = Path.GetFileName(directory);
             var metadataPath = Path.Combine(directory, "instance.json");
-            if (!File.Exists(metadataPath))
+            var instance = await TryReadInstanceAsync(metadataPath, cancellationToken);
+
+            if (instance is null)
             {
-                continue;
+                var versionFile = Path.Combine(directory, $"{id}.json");
+                if (!File.Exists(versionFile))
+                {
+                    continue;
+                }
+
+                instance = new Instance
+                {
+                    Id = id,
+                    Name = id,
+                    VersionId = id,
+                    Isolated = HasLocalGameData(directory),
+                };
             }
 
-            try
+            instances.Add(instance with
             {
-                await using var stream = File.OpenRead(metadataPath);
-                var instance = await JsonSerializer.DeserializeAsync<Instance>(
-                    stream,
-                    JsonOptions,
-                    cancellationToken);
-                if (instance is not null)
-                {
-                    instances.Add(instance);
-                }
-            }
-            catch (JsonException)
-            {
-                // Ignore incomplete or corrupted instance metadata.
-            }
+                Id = id,
+                Name = string.IsNullOrWhiteSpace(instance.Name) ? id : instance.Name,
+                VersionId = string.IsNullOrWhiteSpace(instance.VersionId) ? id : instance.VersionId,
+            });
         }
 
         return instances
@@ -63,7 +68,7 @@ public sealed class InstanceStore
     {
         ValidateId(instance.Id);
 
-        var directory = Path.Combine(_paths.Instances, instance.Id);
+        var directory = Path.Combine(_paths.Versions, instance.Id);
         Directory.CreateDirectory(directory);
 
         var metadataPath = Path.Combine(directory, "instance.json");
@@ -85,6 +90,37 @@ public sealed class InstanceStore
             }
         }
     }
+
+    private static async Task<Instance?> TryReadInstanceAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            return await JsonSerializer.DeserializeAsync<Instance>(
+                stream,
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static bool HasLocalGameData(string directory) =>
+        File.Exists(Path.Combine(directory, "options.txt")) ||
+        Directory.Exists(Path.Combine(directory, "saves")) ||
+        Directory.Exists(Path.Combine(directory, "mods")) ||
+        Directory.Exists(Path.Combine(directory, "config")) ||
+        Directory.Exists(Path.Combine(directory, "resourcepacks")) ||
+        Directory.Exists(Path.Combine(directory, "shaderpacks"));
 
     private static void ValidateId(string id)
     {

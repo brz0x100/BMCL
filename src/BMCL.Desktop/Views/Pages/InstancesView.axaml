@@ -5,13 +5,51 @@
              xmlns:instances="using:BMCL.Core.Instances"
              x:Class="BMCL.Desktop.Views.Pages.InstancesView"
              x:DataType="vm:InstancesViewModel">
+  <UserControl.Styles>
+    <Style Selector="ListBox.InstanceGrid">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceGrid ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="5" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceGrid ListBoxItem:selected">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceGrid ListBoxItem:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.InstanceCard">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerLow}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource OutlineVariant}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceGrid ListBoxItem:selected Border.InstanceCard">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Primary}" />
+    </Style>
+  </UserControl.Styles>
+
   <Border Background="Transparent" Padding="28,24">
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Spacing="4">
           <TextBlock Classes="HeadlineSmall" Text="Instances" />
           <TextBlock Classes="BodyMedium"
-                     Text="Manage isolated Minecraft instances."
+                     Text="Manage Minecraft instances."
                      Foreground="{DynamicResource OnSurfaceVariant}" />
         </StackPanel>
         <Button Grid.Column="1"
@@ -21,8 +59,42 @@
                 VerticalAlignment="Center" />
       </Grid>
 
-      <Grid Grid.Row="1" Margin="0,20,0,0">
-        <Border Classes="Card Outlined" IsVisible="{Binding !HasInstances}">
+      <Grid Grid.Row="1"
+            Margin="0,20,0,0"
+            ColumnDefinitions="*,Auto,Auto">
+        <TextBox Classes="Outlined"
+                 PlaceholderText="Search instances"
+                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 VerticalAlignment="Center" />
+        <ComboBox Grid.Column="1"
+                  SelectedIndex="{Binding SelectedSortIndex, Mode=TwoWay}"
+                  Width="170"
+                  Margin="8,0,0,0"
+                  VerticalAlignment="Center"
+                  ToolTip.Tip="Sort instances">
+          <ComboBoxItem Content="Name" />
+          <ComboBoxItem Content="Last played" />
+          <ComboBoxItem Content="Created" />
+          <ComboBoxItem Content="Version" />
+        </ComboBox>
+        <Button Grid.Column="2"
+                Classes="Outlined"
+                Width="36"
+                Height="36"
+                Padding="0"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding ToggleSortDirectionCommand}"
+                ToolTip.Tip="Toggle sort direction">
+          <icons:MaterialIcon Kind="{Binding SortIcon}"
+                              IconSize="18"
+                              Foreground="{DynamicResource OnSurfaceVariant}" />
+        </Button>
+      </Grid>
+
+      <Grid Grid.Row="2" Margin="0,16,0,0">
+        <Border Classes="Card Outlined"
+                IsVisible="{Binding !HasInstances}">
           <StackPanel HorizontalAlignment="Center"
                       VerticalAlignment="Center"
                       Spacing="10">
@@ -30,10 +102,10 @@
                                 IconSize="48"
                                 Foreground="{DynamicResource OnSurfaceVariant}" />
             <TextBlock Classes="TitleMedium"
-                       Text="No instances yet"
+                       Text="{Binding EmptyStateTitle}"
                        HorizontalAlignment="Center" />
             <TextBlock Classes="BodySmall"
-                       Text="Create an instance after installing a Minecraft version."
+                       Text="{Binding EmptyStateMessage}"
                        Foreground="{DynamicResource OnSurfaceVariant}"
                        TextAlignment="Center"
                        TextWrapping="Wrap"
@@ -41,33 +113,56 @@
           </StackPanel>
         </Border>
 
-        <Border Classes="Card Outlined"
-                Padding="8"
-                IsVisible="{Binding HasInstances}">
-          <ListBox ItemsSource="{Binding Instances}"
-                   SelectedItem="{Binding SelectedInstance, Mode=TwoWay}">
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="instances:Instance">
-                <Grid ColumnDefinitions="*,Auto" Margin="8,6">
-                  <StackPanel Spacing="2">
-                    <TextBlock Classes="TitleSmall" Text="{Binding Name}" />
-                    <TextBlock Classes="LabelSmall"
-                               Text="{Binding VersionId}"
-                               Foreground="{DynamicResource OnSurfaceVariant}" />
+        <ListBox Classes="InstanceGrid"
+                 ItemsSource="{Binding Instances}"
+                 SelectedItem="{Binding SelectedInstance, Mode=TwoWay}"
+                 IsVisible="{Binding HasInstances}">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel ItemWidth="220" ItemHeight="92" />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="instances:Instance">
+              <Border Classes="InstanceCard" Padding="16">
+                <Grid ColumnDefinitions="Auto,*">
+                  <Border Width="48"
+                          Height="48"
+                          Background="{DynamicResource SurfaceContainerHighest}"
+                          BorderBrush="{DynamicResource OutlineVariant}"
+                          BorderThickness="1"
+                          CornerRadius="8">
+                    <icons:MaterialIcon Kind="Minecraft"
+                                        IconSize="28"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource Primary}" />
+                  </Border>
+                  <StackPanel Grid.Column="1"
+                              Margin="12,0,0,0"
+                              Spacing="4"
+                              VerticalAlignment="Center">
+                    <TextBlock Classes="TitleSmall"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <icons:MaterialIcon Kind="GamepadVariant"
+                                          IconSize="14"
+                                          Foreground="{DynamicResource OnSurfaceVariant}" />
+                      <TextBlock Classes="LabelSmall"
+                                 Text="{Binding VersionId, StringFormat='Vanilla {0}'}"
+                                 Foreground="{DynamicResource OnSurfaceVariant}"
+                                 TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
                   </StackPanel>
-                  <TextBlock Grid.Column="1"
-                             Classes="LabelSmall"
-                             Text="{Binding LastPlayedAt, StringFormat='Last played {0:yyyy-MM-dd}'}"
-                             Foreground="{DynamicResource OnSurfaceVariant}"
-                             VerticalAlignment="Center" />
                 </Grid>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </Border>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
       </Grid>
 
-      <TextBlock Grid.Row="2"
+      <TextBlock Grid.Row="3"
                  Classes="LabelSmall"
                  Margin="2,12,0,0"
                  Text="{Binding Status}"
