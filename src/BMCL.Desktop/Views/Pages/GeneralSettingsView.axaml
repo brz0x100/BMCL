@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             x:Class="BMCL.Desktop.Views.Pages.GeneralSettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,*">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="HeadlineSmall" Text="General" />
+        <TextBlock Classes="BodyMedium"
+                   Text="Launcher data locations and general information."
+                   Foreground="{DynamicResource OnSurfaceVariant}" />
+      </StackPanel>
+
+      <ScrollViewer Grid.Row="1"
+                    Margin="0,20,0,0"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <Border Classes="Card Outlined" Padding="24">
+          <StackPanel Spacing="18">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="LabelMedium" Text="Launcher directory" />
+              <TextBlock Classes="BodySmall"
+                         Text="{Binding RootDirectory}"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+              <TextBlock Classes="LabelMedium" Text="Configuration file" />
+              <TextBlock Classes="BodySmall"
+                         Text="{Binding ConfigFile}"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+
+            <TextBlock Classes="LabelSmall"
+                       Text="These locations are managed by the launcher."
+                       Foreground="{DynamicResource OnSurfaceVariant}"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </Grid>
+  </Border>
+</UserControl>

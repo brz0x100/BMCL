@@ -8,7 +8,7 @@
       <StackPanel Spacing="4">
         <TextBlock Classes="HeadlineSmall" Text="Global Settings" />
         <TextBlock Classes="BodyMedium"
-                   Text="Configure memory and download behavior."
+                   Text="Configure the memory available to Minecraft."
                    Foreground="{DynamicResource OnSurfaceVariant}" />
       </StackPanel>
 
@@ -34,39 +34,6 @@
                                Increment="256" />
               </StackPanel>
             </Grid>
-
-            <StackPanel Spacing="6">
-              <TextBlock Classes="LabelMedium" Text="Concurrent downloads" />
-              <NumericUpDown Value="{Binding MaxConcurrentDownloads, Mode=TwoWay}"
-                             Minimum="1"
-                             Maximum="32"
-                             Increment="1" />
-            </StackPanel>
-
-            <CheckBox Content="Use BMCLAPI mirror"
-                      IsChecked="{Binding UseBmclApi, Mode=TwoWay}" />
-
-            <StackPanel Spacing="6">
-              <TextBlock Classes="LabelMedium" Text="Theme" />
-              <ComboBox SelectedIndex="{Binding SelectedThemeIndex, Mode=TwoWay}"
-                        HorizontalAlignment="Stretch">
-                <ComboBoxItem Content="Follow system" />
-                <ComboBoxItem Content="Light" />
-                <ComboBoxItem Content="Dark" />
-              </ComboBox>
-              <TextBlock Classes="LabelSmall"
-                         Text="Follow system matches your desktop appearance."
-                         Foreground="{DynamicResource OnSurfaceVariant}"
-                         TextWrapping="Wrap" />
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="LabelMedium" Text="Launcher directory" />
-              <TextBlock Classes="BodySmall"
-                         Text="{Binding RootDirectory}"
-                         Foreground="{DynamicResource OnSurfaceVariant}"
-                         TextWrapping="Wrap" />
-            </StackPanel>
           </StackPanel>
         </Border>
       </ScrollViewer>

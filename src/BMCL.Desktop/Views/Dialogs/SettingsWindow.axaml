@@ -15,6 +15,102 @@
         Width="1032"
         Height="654"
         ShowInTaskbar="False">
+  <Window.Styles>
+    <Style Selector="ListBox.SettingsNavigation">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Vertical" Spacing="0" />
+        </ItemsPanelTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Margin" Value="8,2" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  CornerRadius="22"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="Left"
+                              VerticalContentAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource SecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem TextBlock">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.SettingsNavigation ListBoxItem:selected icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBoxItem.SettingsGroupHeader">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="IsEnabled" Value="False" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="12,12,12,4" />
+      <Setter Property="Margin" Value="8,4,8,0" />
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Content="{TemplateBinding Content}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.SettingsGroupHeader TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBoxItem.SettingsGroupSeparator">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="IsEnabled" Value="False" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Height="1"
+                  Margin="12,8,12,8"
+                  Background="{DynamicResource OutlineVariant}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+  </Window.Styles>
+
   <Grid Margin="24">
     <Border CornerRadius="8"
             BoxShadow="0 1 3 0 #2E000000, 0 6 14 0 #4A000000"
@@ -25,27 +121,79 @@
             CornerRadius="8"
             ClipToBounds="True">
       <Panel>
-        <Grid ColumnDefinitions="96,*">
+        <Grid ColumnDefinitions="200,*">
           <Border Grid.Column="0"
                   Background="{DynamicResource SurfaceContainerLow}"
                   BorderBrush="{DynamicResource OutlineVariant}"
                   BorderThickness="0,0,1,0"
                   CornerRadius="8,0,0,8">
-            <ListBox Classes="NavigationRail"
-                     Margin="0,40,0,0"
-                     SelectedIndex="{Binding SelectedSectionIndex, Mode=TwoWay}">
-              <ListBoxItem Tag="Global Settings" ToolTip.Tip="Global Settings">
-                <icons:MaterialIcon Kind="Cog" IconSize="20" />
+            <ListBox Classes="SettingsNavigation"
+                     Margin="0,16,0,0"
+                     SelectedIndex="{Binding SelectedNavigationIndex, Mode=TwoWay}">
+              <ListBoxItem Classes="SettingsGroupHeader">
+                <TextBlock Text="Launcher"
+                           Margin="12,0,0,2"/>
               </ListBoxItem>
-              <ListBoxItem Tag="Java Management" ToolTip.Tip="Java Management">
-                <icons:MaterialIcon Kind="Coffee" IconSize="20" />
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Cog" IconSize="18" />
+                  <TextBlock Text="General" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Palette" IconSize="18" />
+                  <TextBlock Text="Appearance" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Download" IconSize="18" />
+                  <TextBlock Text="Download" />
+                </StackPanel>
+              </ListBoxItem>
+
+              <ListBoxItem Classes="SettingsGroupSeparator" />
+
+              <ListBoxItem Classes="SettingsGroupHeader">
+                <TextBlock Text="Game"
+                           Margin="12,0,0,2"/>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="GamepadVariant" IconSize="18" />
+                  <TextBlock Text="Global Settings" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Coffee" IconSize="18" />
+                  <TextBlock Text="Java Management" />
+                </StackPanel>
+              </ListBoxItem>
+
+              <ListBoxItem Classes="SettingsGroupSeparator" />
+
+              <ListBoxItem Classes="SettingsGroupHeader">
+                <TextBlock Text="Help"
+                           Margin="12,0,0,2"/>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Information" IconSize="18" />
+                  <TextBlock Text="About" />
+                </StackPanel>
               </ListBoxItem>
             </ListBox>
           </Border>
 
           <Grid Grid.Column="1">
-            <pages:SettingsView IsVisible="{Binding IsGlobalSection}" />
+            <pages:GeneralSettingsView IsVisible="{Binding IsGeneralSection}" />
+            <pages:AppearanceSettingsView IsVisible="{Binding IsAppearanceSection}" />
+            <pages:DownloadSettingsView IsVisible="{Binding IsDownloadSection}" />
+            <pages:SettingsView IsVisible="{Binding IsGlobalSettingsSection}" />
             <pages:JavaSettingsView IsVisible="{Binding IsJavaSection}" />
+            <pages:AboutSettingsView IsVisible="{Binding IsAboutSection}" />
           </Grid>
         </Grid>
 

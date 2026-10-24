@@ -63,3 +63,8 @@ Bad:
 // Loop over the entries.
 // The list of mods.
 ```
+
+## Others
+
+Don't directly modify code that the developer has already changed.
+If a modification is indeed necessary, please inquire first.

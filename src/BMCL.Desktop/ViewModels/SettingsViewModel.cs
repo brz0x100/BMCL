@@ -13,18 +13,29 @@ public sealed partial class SettingsViewModel : ViewModelBase
     {
         _settings = settings;
         RootDirectory = paths.Root;
+        ConfigFile = paths.ConfigFile;
         LoadFromSettings(settings.Settings);
         settings.Changed += (_, _) => LoadFromSettings(settings.Settings);
     }
 
     public string RootDirectory { get; }
 
-    public bool IsGlobalSection => SelectedSectionIndex == 0;
+    public string ConfigFile { get; }
 
-    public bool IsJavaSection => SelectedSectionIndex == 1;
+    public bool IsGeneralSection => SelectedNavigationIndex == 1;
+
+    public bool IsAppearanceSection => SelectedNavigationIndex == 2;
+
+    public bool IsDownloadSection => SelectedNavigationIndex == 3;
+
+    public bool IsGlobalSettingsSection => SelectedNavigationIndex == 6;
+
+    public bool IsJavaSection => SelectedNavigationIndex == 7;
+
+    public bool IsAboutSection => SelectedNavigationIndex == 10;
 
     [ObservableProperty]
-    private int _selectedSectionIndex;
+    private int _selectedNavigationIndex = 1;
 
     [ObservableProperty]
     private string? _javaPath;
@@ -47,10 +58,14 @@ public sealed partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _status = "Settings loaded";
 
-    partial void OnSelectedSectionIndexChanged(int value)
+    partial void OnSelectedNavigationIndexChanged(int value)
     {
-        OnPropertyChanged(nameof(IsGlobalSection));
+        OnPropertyChanged(nameof(IsGeneralSection));
+        OnPropertyChanged(nameof(IsAppearanceSection));
+        OnPropertyChanged(nameof(IsDownloadSection));
+        OnPropertyChanged(nameof(IsGlobalSettingsSection));
         OnPropertyChanged(nameof(IsJavaSection));
+        OnPropertyChanged(nameof(IsAboutSection));
     }
 
     [RelayCommand]

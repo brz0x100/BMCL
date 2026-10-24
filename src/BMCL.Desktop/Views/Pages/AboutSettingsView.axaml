@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             x:Class="BMCL.Desktop.Views.Pages.AboutSettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,*">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="HeadlineSmall" Text="About" />
+        <TextBlock Classes="BodyMedium"
+                   Text="About BMCL."
+                   Foreground="{DynamicResource OnSurfaceVariant}" />
+      </StackPanel>
+
+      <ScrollViewer Grid.Row="1"
+                    Margin="0,20,0,0"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <Border Classes="Card Outlined" Padding="24">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="TitleLarge" Text="BMCL" />
+            <TextBlock Classes="BodyMedium"
+                       Text="A lightweight Minecraft launcher built with Avalonia."
+                       Foreground="{DynamicResource OnSurfaceVariant}"
+                       TextWrapping="Wrap" />
+            <TextBlock Classes="LabelSmall"
+                       Text="Local data and configuration stay on this computer."
+                       Foreground="{DynamicResource OnSurfaceVariant}"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </Grid>
+  </Border>
+</UserControl>
