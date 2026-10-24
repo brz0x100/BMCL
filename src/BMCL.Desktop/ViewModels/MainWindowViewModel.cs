@@ -12,10 +12,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 {
     private readonly LauncherSettingsService _settings;
     private readonly AccountManager _accounts;
+    private readonly GameLaunchService _gameLauncher;
 
     public MainWindowViewModel(
         LauncherSettingsService settings,
         AccountManager accounts,
+        GameLaunchService gameLauncher,
         HomeViewModel homePage,
         InstancesViewModel instancesPage,
         DownloadsViewModel downloadsPage,
@@ -24,6 +26,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         _settings = settings;
         _accounts = accounts;
+        _gameLauncher = gameLauncher;
 
         HomePage = homePage;
         InstancesPage = instancesPage;
@@ -34,8 +37,19 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _currentPage = homePage;
         _selectedPageIndex = 0;
 
-        _accounts.Changed += (_, _) => UpdateAccountState();
+        _accounts.Changed += (_, _) =>
+        {
+            UpdateAccountState();
+            NotifyLaunchState();
+        };
         _settings.Changed += (_, _) => ApplyTheme(_settings.Settings.Theme);
+        InstancesPage.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(InstancesViewModel.SelectedInstance))
+            {
+                NotifyLaunchState();
+            }
+        };
 
         UpdateAccountState();
         ApplyTheme(_settings.Settings.Theme);
@@ -57,7 +71,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         ? "Microsoft"
         : "Offline";
 
-    public bool CanLaunch => false;
+    public bool CanLaunch =>
+        !IsLaunching &&
+        _accounts.SelectedAccount is not null &&
+        InstancesPage.SelectedInstance is not null;
+
+    public string LaunchButtonText => IsLaunching ? "Launching..." : "Launch Game";
 
     public bool IsHomePage => CurrentPage == HomePage;
 
@@ -72,6 +91,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isDialogOpen;
+
+    [ObservableProperty]
+    private bool _isLaunching;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -109,6 +131,36 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         CurrentPage = InstancesPage;
     }
 
+    [RelayCommand]
+    private async Task LaunchGameAsync(CancellationToken cancellationToken)
+    {
+        if (!CanLaunch || InstancesPage.SelectedInstance is not { } instance)
+        {
+            return;
+        }
+
+        IsLaunching = true;
+        Status = $"Launching {instance.Name}...";
+
+        try
+        {
+            var result = await _gameLauncher.LaunchAsync(instance, cancellationToken);
+            Status = $"Launched {instance.Name} with {Path.GetFileName(result.JavaPath)}.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Launch canceled.";
+        }
+        catch (Exception exception)
+        {
+            Status = $"Launch failed: {exception.Message}";
+        }
+        finally
+        {
+            IsLaunching = false;
+        }
+    }
+
     partial void OnCurrentPageChanged(ViewModelBase value)
     {
         OnPropertyChanged(nameof(IsHomePage));
@@ -125,10 +177,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         };
     }
 
+    partial void OnIsLaunchingChanged(bool value) => NotifyLaunchState();
+
     private void UpdateAccountState()
     {
         OnPropertyChanged(nameof(AccountName));
         OnPropertyChanged(nameof(AccountTypeText));
+    }
+
+    private void NotifyLaunchState()
+    {
+        OnPropertyChanged(nameof(CanLaunch));
+        OnPropertyChanged(nameof(LaunchButtonText));
     }
 
     private void ApplyTheme(LauncherTheme theme)

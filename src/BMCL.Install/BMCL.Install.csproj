@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BMCL.Install</RootNamespace>
+    <AssemblyName>BMCL.Install</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../BMCL.Core/BMCL.Core.csproj" />
+    <ProjectReference Include="../BMCL.Download/BMCL.Download.csproj" />
+    <ProjectReference Include="../BMCL.Launch/BMCL.Launch.csproj" />
+  </ItemGroup>
+</Project>

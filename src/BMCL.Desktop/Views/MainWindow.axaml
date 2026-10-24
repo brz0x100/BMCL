@@ -238,7 +238,8 @@
                 Margin="0,16,0,0"
                 HorizontalAlignment="Stretch"
                 IsEnabled="{Binding CanLaunch}"
-                ToolTip.Tip="Launch will be enabled after the launch flow is implemented.">
+                Command="{Binding LaunchGameCommand}"
+                ToolTip.Tip="Select an account and an installed instance, then launch.">
           <StackPanel Orientation="Horizontal"
                       Spacing="8"
                       HorizontalAlignment="Center">
@@ -246,7 +247,7 @@
                                 IconSize="18"
                                 Foreground="{DynamicResource OnPrimary}" />
             <TextBlock Classes="LabelLarge"
-                       Text="Launch Game"
+                       Text="{Binding LaunchButtonText}"
                        VerticalAlignment="Center" />
           </StackPanel>
         </Button>

@@ -24,7 +24,7 @@
                        PlaceholderText="Leave empty to auto-detect"
                        Text="{Binding JavaPath, Mode=TwoWay}" />
               <TextBlock Classes="LabelSmall"
-                         Text="Auto-detection will be added with the launch flow."
+                         Text="Leave empty to auto-detect the best compatible runtime at launch."
                          Foreground="{DynamicResource OnSurfaceVariant}"
                          TextWrapping="Wrap" />
             </StackPanel>

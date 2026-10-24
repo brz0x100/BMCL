@@ -16,5 +16,6 @@
     <ProjectReference Include="../../src/BMCL.Download/BMCL.Download.csproj" />
     <ProjectReference Include="../../src/BMCL.Auth/BMCL.Auth.csproj" />
     <ProjectReference Include="../../src/BMCL.Launch/BMCL.Launch.csproj" />
+    <ProjectReference Include="..\..\src\BMCL.Install\BMCL.Install.csproj" />
   </ItemGroup>
 </Project>

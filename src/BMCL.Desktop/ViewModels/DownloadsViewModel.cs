@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Net.Http;
 using BMCL.Core.Minecraft;
 using BMCL.Download;
+using BMCL.Install;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,14 +11,30 @@ namespace BMCL.Desktop.ViewModels;
 public sealed partial class DownloadsViewModel : ViewModelBase
 {
     private readonly MinecraftVersionService _versionService;
+    private readonly MinecraftInstaller _installer;
+    private readonly InstancesViewModel _instances;
     private readonly List<VersionSummary> _allVersions = [];
 
-    public DownloadsViewModel(MinecraftVersionService versionService)
+    public DownloadsViewModel(
+        MinecraftVersionService versionService,
+        MinecraftInstaller installer,
+        InstancesViewModel instances)
     {
         _versionService = versionService;
+        _installer = installer;
+        _instances = instances;
     }
 
     public ObservableCollection<VersionSummary> Versions { get; } = new();
+
+    [ObservableProperty]
+    private VersionSummary? _selectedVersion;
+
+    [ObservableProperty]
+    private bool _isInstalling;
+
+    [ObservableProperty]
+    private double _installProgress;
 
     [ObservableProperty]
     private string _searchText = "";
@@ -53,6 +70,8 @@ public sealed partial class DownloadsViewModel : ViewModelBase
     public string PageStatus => IsGamesSelected
         ? Status
         : $"{SelectedTabLabel} browsing will be added in a later milestone.";
+
+    public bool CanInstall => !IsInstalling && SelectedVersion is not null && IsGamesSelected;
 
     public async Task LoadAsync(
         bool forceRefresh = false,
@@ -113,6 +132,55 @@ public sealed partial class DownloadsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsGamesSelected));
         OnPropertyChanged(nameof(SelectedTabLabel));
         OnPropertyChanged(nameof(PageStatus));
+        OnPropertyChanged(nameof(CanInstall));
+    }
+
+    partial void OnSelectedVersionChanged(VersionSummary? value) =>
+        OnPropertyChanged(nameof(CanInstall));
+
+    partial void OnIsInstallingChanged(bool value) =>
+        OnPropertyChanged(nameof(CanInstall));
+
+    [RelayCommand]
+    private async Task InstallSelectedAsync(CancellationToken cancellationToken)
+    {
+        if (!CanInstall || SelectedVersion is not { } version)
+        {
+            return;
+        }
+
+        IsInstalling = true;
+        InstallProgress = 0;
+        Status = $"Preparing Minecraft {version.Id}...";
+
+        try
+        {
+            var progress = new Progress<InstallProgress>(update =>
+            {
+                Status = update.Stage;
+                InstallProgress = update.Percent;
+            });
+
+            var instance = await _installer.InstallAsync(version.Id, progress, cancellationToken);
+            await _instances.LoadAsync(cancellationToken);
+            _instances.SelectedInstance = _instances.Instances.FirstOrDefault(
+                candidate => string.Equals(candidate.Id, instance.Id, StringComparison.Ordinal));
+
+            InstallProgress = 100;
+            Status = $"Installed {instance.Name}. Select it on Home to launch.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Installation canceled.";
+        }
+        catch (Exception exception)
+        {
+            Status = $"Installation failed: {exception.Message}";
+        }
+        finally
+        {
+            IsInstalling = false;
+        }
     }
 
     private void ApplyFilter()
