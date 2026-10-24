@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:instances="using:BMCL.Core.Instances"
+             x:Class="BMCL.Desktop.Views.Pages.InstancesView"
+             x:DataType="vm:InstancesViewModel">
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="HeadlineSmall" Text="Instances" />
+          <TextBlock Classes="BodyMedium"
+                     Text="Manage isolated Minecraft instances."
+                     Foreground="{DynamicResource OnSurfaceVariant}" />
+        </StackPanel>
+        <Button Grid.Column="1"
+                Classes="Text"
+                Content="Refresh"
+                Command="{Binding RefreshCommand}"
+                VerticalAlignment="Center" />
+      </Grid>
+
+      <Grid Grid.Row="1" Margin="0,20,0,0">
+        <Border Classes="Card Outlined" IsVisible="{Binding !HasInstances}">
+          <StackPanel HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Spacing="10">
+            <icons:MaterialIcon Kind="ViewDashboard"
+                                IconSize="48"
+                                Foreground="{DynamicResource OnSurfaceVariant}" />
+            <TextBlock Classes="TitleMedium"
+                       Text="No instances yet"
+                       HorizontalAlignment="Center" />
+            <TextBlock Classes="BodySmall"
+                       Text="Create an instance after installing a Minecraft version."
+                       Foreground="{DynamicResource OnSurfaceVariant}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="Card Outlined"
+                Padding="8"
+                IsVisible="{Binding HasInstances}">
+          <ListBox ItemsSource="{Binding Instances}"
+                   SelectedItem="{Binding SelectedInstance, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="instances:Instance">
+                <Grid ColumnDefinitions="*,Auto" Margin="8,6">
+                  <StackPanel Spacing="2">
+                    <TextBlock Classes="TitleSmall" Text="{Binding Name}" />
+                    <TextBlock Classes="LabelSmall"
+                               Text="{Binding VersionId}"
+                               Foreground="{DynamicResource OnSurfaceVariant}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1"
+                             Classes="LabelSmall"
+                             Text="{Binding LastPlayedAt, StringFormat='Last played {0:yyyy-MM-dd}'}"
+                             Foreground="{DynamicResource OnSurfaceVariant}"
+                             VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
+      </Grid>
+
+      <TextBlock Grid.Row="2"
+                 Classes="LabelSmall"
+                 Margin="2,12,0,0"
+                 Text="{Binding Status}"
+                 Foreground="{DynamicResource OnSurfaceVariant}" />
+    </Grid>
+  </Border>
+</UserControl>

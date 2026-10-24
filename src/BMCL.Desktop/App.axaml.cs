@@ -1,7 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using BMCL.Auth;
 using BMCL.Core.Configuration;
+using BMCL.Core.Instances;
+using BMCL.Desktop.Services;
 using BMCL.Desktop.ViewModels;
 using BMCL.Desktop.Views;
 using BMCL.Download;
@@ -38,6 +41,16 @@ public partial class App : Application
         services.AddSingleton<MinecraftVersionService>();
         services.AddSingleton<IJavaLocator, JavaLocator>();
         services.AddSingleton<LaunchCommandBuilder>();
+        services.AddSingleton<LauncherSettingsStore>();
+        services.AddSingleton<LauncherSettingsService>();
+        services.AddSingleton(new AccountStore(Path.Combine(paths.Root, "accounts.json")));
+        services.AddSingleton<AccountManager>();
+        services.AddSingleton<InstanceStore>();
+        services.AddSingleton<HomeViewModel>();
+        services.AddSingleton<InstancesViewModel>();
+        services.AddSingleton<DownloadsViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<AccountViewModel>();
         services.AddSingleton<MainWindowViewModel>();
 
         _services = services.BuildServiceProvider();
@@ -46,7 +59,7 @@ public partial class App : Application
         {
             var viewModel = _services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow { DataContext = viewModel };
-            viewModel.RefreshCommand.Execute(null);
+            _ = viewModel.InitializeAsync();
             desktop.Exit += (_, _) => _services?.Dispose();
         }
 

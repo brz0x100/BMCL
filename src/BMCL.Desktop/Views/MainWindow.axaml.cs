@@ -1,6 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using BMCL.Desktop.ViewModels;
+using BMCL.Desktop.Views.Dialogs;
 using Material.Icons;
 
 namespace BMCL.Desktop.Views;
@@ -44,6 +47,13 @@ public partial class MainWindow : Window
             TopBarBackground.CornerRadius = isMaximized
                 ? default
                 : new CornerRadius(8, 8, 0, 0);
+        }
+
+        if (ContentBackgroundBorder is not null)
+        {
+            ContentBackgroundBorder.CornerRadius = isMaximized
+                ? default
+                : new CornerRadius(0, 0, 8, 8);
         }
 
         if (SidebarBorder is not null)
@@ -152,6 +162,64 @@ public partial class MainWindow : Window
     private void OnCloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Close();
+    }
+
+    private async void OnOpenSettingsClick(object? sender, RoutedEventArgs e)
+    {
+        await ShowSettingsDialogAsync();
+    }
+
+    private async void OnOpenAccountClick(object? sender, RoutedEventArgs e)
+    {
+        await ShowAccountDialogAsync();
+    }
+
+    private async Task ShowSettingsDialogAsync()
+    {
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.IsDialogOpen)
+        {
+            return;
+        }
+
+        viewModel.IsDialogOpen = true;
+        var window = new SettingsWindow { DataContext = viewModel.SettingsPage };
+        DialogSizing.ApplySettings(window, this);
+        try
+        {
+            await window.ShowDialog(this);
+        }
+        catch (Exception exception)
+        {
+            viewModel.Status = $"Failed to open settings: {exception.Message}";
+        }
+        finally
+        {
+            viewModel.IsDialogOpen = false;
+        }
+    }
+
+    private async Task ShowAccountDialogAsync()
+    {
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.IsDialogOpen)
+        {
+            return;
+        }
+
+        viewModel.IsDialogOpen = true;
+        var window = new AccountWindow { DataContext = viewModel.AccountPage };
+        DialogSizing.ApplyAccount(window, this);
+        try
+        {
+            await window.ShowDialog(this);
+        }
+        catch (Exception exception)
+        {
+            viewModel.Status = $"Failed to open accounts: {exception.Message}";
+        }
+        finally
+        {
+            viewModel.IsDialogOpen = false;
+        }
     }
 
     private void ToggleMaximize()

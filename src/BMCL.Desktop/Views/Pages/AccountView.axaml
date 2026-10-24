@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             xmlns:auth="using:BMCL.Auth"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="BMCL.Desktop.Views.Pages.AccountView"
+             x:DataType="vm:AccountViewModel">
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="HeadlineSmall" Text="Accounts" />
+        <TextBlock Classes="BodyMedium"
+                   Text="Create and select an offline account. Microsoft login will be added later."
+                   Foreground="{DynamicResource OnSurfaceVariant}" />
+      </StackPanel>
+
+      <ScrollViewer Grid.Row="1"
+                    Margin="0,20,0,0"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <Border Classes="Card Outlined" Padding="24">
+          <StackPanel Spacing="18">
+            <Grid>
+              <TextBlock Classes="TitleMedium" Text="Saved accounts" />
+              <TextBlock Classes="LabelSmall"
+                         Text="No accounts yet"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding !HasAccounts}" />
+            </Grid>
+
+            <Border BorderBrush="{DynamicResource OutlineVariant}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    IsVisible="{Binding HasAccounts}">
+              <ListBox ItemsSource="{Binding Accounts}"
+                       SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
+                       MaxHeight="220">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="auth:MinecraftAccount">
+                    <Grid ColumnDefinitions="*,Auto" Margin="8,6">
+                      <TextBlock Classes="TitleSmall" Text="{Binding Name}" />
+                      <TextBlock Grid.Column="1"
+                                 Classes="LabelSmall"
+                                 Text="{Binding Type}"
+                                 Foreground="{DynamicResource OnSurfaceVariant}"
+                                 VerticalAlignment="Center" />
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Border>
+
+            <StackPanel Spacing="8">
+              <TextBlock Classes="LabelMedium" Text="Add offline account" />
+              <TextBox Classes="Outlined"
+                       PlaceholderText="Player name"
+                       MaxLength="16"
+                       Text="{Binding NewAccountName, Mode=TwoWay}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Classes="Filled"
+                        Content="Add Offline Account"
+                        Command="{Binding AddOfflineAccountCommand}" />
+                <Button Classes="Outlined"
+                        Content="Use Selected Account"
+                        Command="{Binding UseSelectedAccountCommand}" />
+              </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <icons:MaterialIcon Kind="Information"
+                                  IconSize="18"
+                                  Foreground="{DynamicResource OnSurfaceVariant}" />
+              <TextBlock Classes="BodySmall"
+                         Text="Offline accounts are local only and cannot access online services."
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         TextWrapping="Wrap"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+
+      <TextBlock Grid.Row="2"
+                 Classes="LabelSmall"
+                 Margin="2,12,0,0"
+                 Text="{Binding Status}"
+                 Foreground="{DynamicResource OnSurfaceVariant}" />
+    </Grid>
+  </Border>
+</UserControl>

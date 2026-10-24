@@ -3,6 +3,7 @@
         xmlns:vm="using:BMCL.Desktop.ViewModels"
         xmlns:material="using:CCSWE.Avalonia.Material"
         xmlns:icons="using:Material.Icons.Avalonia"
+        xmlns:pages="using:BMCL.Desktop.Views.Pages"
         x:Class="BMCL.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="BMCL"
@@ -15,34 +16,18 @@
         TransparencyLevelHint="Transparent"
         Background="Transparent"
         Foreground="{DynamicResource OnSurface}">
-  <Window.Resources>
-    <ControlTheme x:Key="CaptionButton" TargetType="Button">
-      <Setter Property="Width" Value="40" />
-      <Setter Property="Height" Value="40" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
-      <Setter Property="Focusable" Value="False" />
-      <Setter Property="Template">
-        <ControlTemplate>
-          <Panel Background="Transparent">
-            <Border Name="PART_StateLayer"
-                    Background="{DynamicResource OnSurface}"
-                    Opacity="0" />
-            <ContentPresenter Content="{TemplateBinding Content}"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center" />
-          </Panel>
-        </ControlTemplate>
-      </Setter>
-      <Style Selector="^:pointerover /template/ Border#PART_StateLayer">
-        <Setter Property="Opacity" Value="0.08" />
-      </Style>
-      <Style Selector="^:pressed /template/ Border#PART_StateLayer">
-        <Setter Property="Opacity" Value="0.12" />
-      </Style>
-    </ControlTheme>
-  </Window.Resources>
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+      <pages:HomeView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:InstancesViewModel}">
+      <pages:InstancesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DownloadsViewModel}">
+      <pages:DownloadsView />
+    </DataTemplate>
+  </Window.DataTemplates>
 
   <Window.Styles>
     <Style Selector="ListBoxItem icons|MaterialIcon">
@@ -60,13 +45,13 @@
     <Border x:Name="ShadowBorder"
             Margin="24"
             CornerRadius="8"
-            BoxShadow="0 2 4 0 #14000000,0 6 16 0 #1F000000,0 16 40 0 #26000000"
+            BoxShadow="0 1 3 0 #2E000000, 0 6 14 0 #4A000000"
             IsHitTestVisible="False" />
     <Border x:Name="RootBorder"
             Margin="24"
             Background="Transparent"
             ZIndex="1">
-      <Grid RowDefinitions="40,*" ColumnDefinitions="80,*,300">
+      <Grid RowDefinitions="40,*" ColumnDefinitions="80,*,Auto">
     <Border x:Name="TopBarBackground"
             Grid.Row="0"
             Grid.ColumnSpan="3"
@@ -84,19 +69,6 @@
                               IconSize="20"
                               Foreground="{DynamicResource Primary}" />
           <TextBlock Classes="TitleMedium" Text="BMCL" VerticalAlignment="Center" />
-        </StackPanel>
-
-        <StackPanel Grid.Column="1"
-                    Orientation="Horizontal"
-                    Spacing="4"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Margin="0,0,16,0">
-          <Button Classes="Text"
-                  Content="Running Instances"
-                  Height="32"
-                  MinHeight="0"
-                  Padding="12,0" />
         </StackPanel>
 
         <StackPanel Grid.Column="2"
@@ -131,6 +103,12 @@
       </Panel>
     </Border>
 
+    <Border x:Name="ContentBackgroundBorder"
+            Grid.Row="1"
+            Grid.ColumnSpan="3"
+            Background="{DynamicResource Surface}"
+            CornerRadius="0,0,8,8" />
+
     <Border x:Name="SidebarBorder"
             Grid.Row="1"
             Grid.Column="0"
@@ -139,7 +117,9 @@
             BorderThickness="0,0,1,0"
             CornerRadius="0,0,0,8">
       <Grid RowDefinitions="*,Auto">
-        <ListBox Classes="NavigationRail" SelectedIndex="0" VerticalAlignment="Top">
+        <ListBox Classes="NavigationRail"
+                 SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay}"
+                 VerticalAlignment="Top">
           <ListBoxItem Tag="Home" ToolTip.Tip="Home">
             <icons:MaterialIcon Kind="Home" IconSize="20" />
           </ListBoxItem>
@@ -161,18 +141,8 @@
                   Padding="0"
                   CornerRadius="20"
                   Foreground="{DynamicResource OnSurfaceVariant}"
-                  ToolTip.Tip="Toggle theme">
-            <icons:MaterialIcon Kind="MoonAndStars"
-                                IconSize="20"
-                                Foreground="{DynamicResource OnSurfaceVariant}" />
-          </Button>
-          <Button Classes="Outlined"
-                  Width="40"
-                  Height="40"
-                  Padding="0"
-                  CornerRadius="20"
-                  Foreground="{DynamicResource OnSurfaceVariant}"
-                  ToolTip.Tip="Settings">
+                  ToolTip.Tip="Settings"
+                  Click="OnOpenSettingsClick">
             <icons:MaterialIcon Kind="Cog"
                                 IconSize="20"
                                 Foreground="{DynamicResource OnSurfaceVariant}" />
@@ -181,89 +151,94 @@
       </Grid>
     </Border>
 
-    <Border Grid.Row="1"
-            Grid.Column="1"
-            Padding="28,24"
-            Background="{DynamicResource Surface}">
-      <Grid RowDefinitions="Auto,*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Classes="HeadlineSmall" Text="Home" />
-          <TextBlock Classes="BodyMedium"
-                     Text="BMCL · Minecraft Launcher"
-                     Foreground="{DynamicResource OnSurfaceVariant}" />
-        </StackPanel>
-
-        <Border Grid.Row="1"
-                Classes="Card Outlined"
-                Margin="0,20,0,0"
-                Padding="28">
-          <StackPanel HorizontalAlignment="Center"
-                      VerticalAlignment="Center"
-                      Spacing="10">
-            <icons:MaterialIcon Kind="Minecraft"
-                                IconSize="56"
-                                Foreground="{DynamicResource Primary}" />
-            <TextBlock Classes="TitleMedium"
-                       Text="Content Area"
-                       HorizontalAlignment="Center" />
-            <TextBlock Classes="BodySmall"
-                       Text="Version list and instance content will appear here"
-                       Foreground="{DynamicResource OnSurfaceVariant}"
-                       HorizontalAlignment="Center" />
-          </StackPanel>
-        </Border>
-
-        <TextBlock Grid.Row="2"
-                   Classes="LabelSmall"
-                   Margin="2,12,0,0"
-                   Text="{Binding Status}"
-                   Foreground="{DynamicResource OnSurfaceVariant}" />
-      </Grid>
-    </Border>
+    <ContentControl Grid.Row="1"
+                    Grid.Column="1"
+                    Content="{Binding CurrentPage}" />
 
     <Border x:Name="RightPanelBorder"
             Grid.Row="1"
             Grid.Column="2"
+            Width="300"
+            IsVisible="{Binding IsHomePage}"
             Background="{DynamicResource SurfaceContainerLow}"
             BorderBrush="{DynamicResource OutlineVariant}"
             BorderThickness="1,0,0,0"
             CornerRadius="0,0,8,0">
-      <Grid Margin="20" RowDefinitions="*,Auto">
-        <Border Classes="Card Outlined"
-                Padding="20"
-                VerticalAlignment="Top">
+      <Grid Margin="20" RowDefinitions="*,Auto,Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
           <StackPanel Spacing="16">
-            <Border Width="64"
-                    Height="64"
-                    HorizontalAlignment="Center"
-                    Background="{DynamicResource PrimaryContainer}"
-                    CornerRadius="32">
-              <icons:MaterialIcon Kind="AccountCircle"
-                                  IconSize="34"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  Foreground="{DynamicResource OnPrimaryContainer}" />
+            <Border Classes="Card Outlined" Padding="20, 38, 20, 20">
+              <StackPanel Spacing="14">
+                <Border Width="64"
+                        Height="64"
+                        HorizontalAlignment="Center"
+                        Background="{DynamicResource PrimaryContainer}"
+                        CornerRadius="14">
+                  <icons:MaterialIcon Kind="AccountCircle"
+                                      IconSize="34"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource OnPrimaryContainer}" />
+                </Border>
+                <StackPanel Spacing="3">
+                  <TextBlock Classes="TitleMedium"
+                             Text="{Binding AccountName}"
+                             HorizontalAlignment="Center" />
+                  <TextBlock Classes="LabelSmall"
+                             Text="{Binding AccountTypeText}"
+                             Foreground="{DynamicResource OnSurfaceVariant}"
+                             HorizontalAlignment="Center" />
+                </StackPanel>
+                <Button Classes="Text"
+                        Content="Manage Account"
+                        HorizontalAlignment="Center"
+                        Click="OnOpenAccountClick" />
+              </StackPanel>
             </Border>
-            <StackPanel Spacing="4">
-              <TextBlock Classes="TitleMedium"
-                         Text="Account"
-                         HorizontalAlignment="Center" />
-              <TextBlock Classes="BodySmall"
-                         Text="Not signed in"
-                         Foreground="{DynamicResource OnSurfaceVariant}"
-                         HorizontalAlignment="Center" />
-            </StackPanel>
-            <Button Classes="Text"
-                    Content="Manage Account"
-                    HorizontalAlignment="Center" />
+
+            <Border Classes="Card Outlined" Padding="20, 38, 20, 20">
+              <StackPanel Spacing="14">
+                <Border Width="64"
+                        Height="64"
+                        HorizontalAlignment="Center"
+                        Background="{DynamicResource SurfaceContainerHighest}"
+                        BorderBrush="{DynamicResource OutlineVariant}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                  <icons:MaterialIcon Kind="ViewDashboard"
+                                      IconSize="30"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource OnSurfaceVariant}" />
+                </Border>
+                <StackPanel Spacing="3">
+                  <TextBlock Classes="TitleMedium"
+                             Text="{Binding InstancesPage.DisplayName}"
+                             HorizontalAlignment="Center" />
+                  <TextBlock Classes="BodySmall"
+                             Text="{Binding InstancesPage.DisplayVersion}"
+                             Foreground="{DynamicResource OnSurfaceVariant}"
+                             TextAlignment="Center"
+                             TextWrapping="Wrap"
+                             HorizontalAlignment="Center" />
+                </StackPanel>
+                <Button Classes="Text"
+                        Content="Manage Instance"
+                        HorizontalAlignment="Center"
+                        Command="{Binding OpenInstancesCommand}" />
+              </StackPanel>
+            </Border>
           </StackPanel>
-        </Border>
+        </ScrollViewer>
 
         <Button Grid.Row="1"
                 Classes="Filled"
                 Height="48"
                 Margin="0,16,0,0"
-                HorizontalAlignment="Stretch">
+                HorizontalAlignment="Stretch"
+                IsEnabled="{Binding CanLaunch}"
+                ToolTip.Tip="Launch will be enabled after the launch flow is implemented.">
           <StackPanel Orientation="Horizontal"
                       Spacing="8"
                       HorizontalAlignment="Center">
@@ -275,8 +250,22 @@
                        VerticalAlignment="Center" />
           </StackPanel>
         </Button>
+
+        <TextBlock Grid.Row="2"
+                   Classes="LabelSmall"
+                   Margin="2,8,0,0"
+                   Text="{Binding Status}"
+                   Foreground="{DynamicResource OnSurfaceVariant}"
+                   TextWrapping="Wrap" />
       </Grid>
     </Border>
+
+    <Border Grid.RowSpan="2"
+            Grid.ColumnSpan="3"
+            Background="#66000000"
+            CornerRadius="8"
+            IsVisible="{Binding IsDialogOpen}"
+            ZIndex="10" />
     </Grid>
   </Border>
 

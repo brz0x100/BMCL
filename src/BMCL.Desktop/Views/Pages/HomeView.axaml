@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="BMCL.Desktop.Views.Pages.HomeView"
+             x:DataType="vm:HomeViewModel">
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,*">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="HeadlineSmall" Text="Home" />
+        <TextBlock Classes="BodyMedium"
+                   Text="BMCL · Minecraft Launcher"
+                   Foreground="{DynamicResource OnSurfaceVariant}" />
+      </StackPanel>
+
+      <Border Grid.Row="1"
+              Classes="Card Outlined"
+              Margin="0,20,0,0"
+              Padding="28">
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="10">
+          <icons:MaterialIcon Kind="Minecraft"
+                              IconSize="56"
+                              Foreground="{DynamicResource Primary}" />
+          <TextBlock Classes="TitleMedium"
+                     Text="Welcome to BMCL"
+                     HorizontalAlignment="Center" />
+          <TextBlock Classes="BodySmall"
+                     Text="Use the sidebar to manage instances, downloads, and settings."
+                     Foreground="{DynamicResource OnSurfaceVariant}"
+                     TextAlignment="Center"
+                     TextWrapping="Wrap"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Border>
+</UserControl>

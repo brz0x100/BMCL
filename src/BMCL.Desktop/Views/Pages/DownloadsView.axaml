@@ -1,0 +1,241 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BMCL.Desktop.ViewModels"
+             xmlns:minecraft="using:BMCL.Core.Minecraft"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="BMCL.Desktop.Views.Pages.DownloadsView"
+             x:DataType="vm:DownloadsViewModel">
+  <UserControl.Styles>
+    <Style Selector="ListBox.TabBar">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Horizontal" Spacing="4" />
+        </ItemsPanelTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="16,8" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  CornerRadius="18"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource SecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem">
+      <Setter Property="Padding" Value="12,6" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem TextBlock">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurface}" />
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.TabBar ListBoxItem:selected icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.SubTabBar ListBoxItem:selected icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurface}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="Transparent" Padding="28,24">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="HeadlineSmall" Text="Downloads" />
+          <TextBlock Classes="BodyMedium"
+                     Text="Browse games and addons. Content for each category will arrive in later milestones."
+                     Foreground="{DynamicResource OnSurfaceVariant}" />
+        </StackPanel>
+        <Button Grid.Column="1"
+                Classes="Text"
+                Content="Refresh"
+                Command="{Binding RefreshCommand}"
+                VerticalAlignment="Center" />
+      </Grid>
+
+      <Grid Grid.Row="1"
+            Margin="0,16,0,0"
+            ColumnDefinitions="Auto,Auto,*">
+        <Border Grid.Column="0"
+                Padding="4"
+                Background="{DynamicResource SurfaceContainerLow}"
+                CornerRadius="22"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left">
+          <ListBox Classes="TabBar"
+                   SelectedIndex="{Binding SelectedSectionIndex, Mode=TwoWay}">
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:MaterialIcon Kind="GamepadVariant" IconSize="16" />
+                <TextBlock Text="New Game" />
+              </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:MaterialIcon Kind="Puzzle" IconSize="16" />
+                <TextBlock Text="Addons" />
+              </StackPanel>
+            </ListBoxItem>
+          </ListBox>
+        </Border>
+
+        <Grid Grid.Column="1"
+              Margin="16,0,0,0"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Left">
+          <ListBox Classes="TabBar SubTabBar"
+                   IsVisible="{Binding IsNewGameSection}"
+                   SelectedIndex="{Binding SelectedNewGameTabIndex, Mode=TwoWay}">
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="Minecraft" IconSize="14" />
+                <TextBlock Text="Games" />
+              </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="PackageVariant" IconSize="14" />
+                <TextBlock Text="Modpacks" />
+              </StackPanel>
+            </ListBoxItem>
+          </ListBox>
+
+          <ListBox Classes="TabBar SubTabBar"
+                   IsVisible="{Binding IsAddonsSection}"
+                   SelectedIndex="{Binding SelectedAddonsTabIndex, Mode=TwoWay}">
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="Package" IconSize="14" />
+                <TextBlock Text="Mods" />
+              </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="Palette" IconSize="14" />
+                <TextBlock Text="Resource Packs" />
+              </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="WeatherSunny" IconSize="14" />
+                <TextBlock Text="Shaders" />
+              </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:MaterialIcon Kind="Terrain" IconSize="14" />
+                <TextBlock Text="Worlds" />
+              </StackPanel>
+            </ListBoxItem>
+          </ListBox>
+        </Grid>
+      </Grid>
+
+      <TextBox Grid.Row="2"
+               Classes="Outlined"
+               Margin="0,16,0,0"
+               PlaceholderText="Search versions"
+               IsEnabled="{Binding IsGamesSelected}"
+               Text="{Binding SearchText, Mode=TwoWay}" />
+
+      <Border Grid.Row="3"
+              Classes="Card Outlined"
+              Margin="0,16,0,0"
+              Padding="8"
+              IsVisible="{Binding IsGamesSelected}">
+        <ListBox ItemsSource="{Binding Versions}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="minecraft:VersionSummary">
+              <Grid ColumnDefinitions="*,Auto" Margin="8,6">
+                <TextBlock Classes="TitleSmall" Text="{Binding Id}" />
+                <TextBlock Grid.Column="1"
+                           Classes="LabelSmall"
+                           Text="{Binding Type}"
+                           Foreground="{DynamicResource OnSurfaceVariant}"
+                           VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+
+      <Border Grid.Row="3"
+              Classes="Card Outlined"
+              Margin="0,16,0,0"
+              Padding="32"
+              IsVisible="{Binding !IsGamesSelected}">
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+          <icons:MaterialIcon Kind="Download"
+                              IconSize="32"
+                              Foreground="{DynamicResource Primary}" />
+          <TextBlock Classes="TitleMedium"
+                     Text="{Binding SelectedTabLabel}"
+                     HorizontalAlignment="Center" />
+          <TextBlock Classes="BodySmall"
+                     Text="This section will be added in a later milestone."
+                     Foreground="{DynamicResource OnSurfaceVariant}"
+                     HorizontalAlignment="Center"
+                     TextAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Grid.Row="4"
+                 Classes="LabelSmall"
+                 Margin="2,12,0,0"
+                 Text="{Binding PageStatus}"
+                 Foreground="{DynamicResource OnSurfaceVariant}" />
+    </Grid>
+  </Border>
+</UserControl>
