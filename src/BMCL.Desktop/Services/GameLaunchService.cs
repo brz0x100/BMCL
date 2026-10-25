@@ -87,7 +87,7 @@ public sealed class GameLaunchService
             VersionName = instance.Name,
             AssetIndexName = version.AssetIndex?.Id,
             LoggingConfigurationPath = loggingPath,
-            MinMemoryMb = _settings.Settings.MinMemoryMb,
+            MinMemoryMb = instance.MinMemoryMb ?? _settings.Settings.MinMemoryMb,
             MaxMemoryMb = memoryMb,
         };
 

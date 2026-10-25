@@ -15,11 +15,18 @@
     <Style Selector="ListBox.InstanceGrid ListBoxItem">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="12" />
       <Setter Property="FocusAdorner" Value="{x:Null}" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="5" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch" />
+        </ControlTemplate>
+      </Setter>
     </Style>
 
     <Style Selector="ListBox.InstanceGrid ListBoxItem:selected">
@@ -54,9 +61,15 @@
         </StackPanel>
         <Button Grid.Column="1"
                 Classes="Text"
-                Content="Refresh"
                 Command="{Binding RefreshCommand}"
-                VerticalAlignment="Center" />
+                VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <icons:MaterialIcon Kind="Refresh"
+                                IconSize="16"
+                                Foreground="{DynamicResource Primary}" />
+            <TextBlock Text="Refresh" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
       </Grid>
 
       <Grid Grid.Row="1"
@@ -119,13 +132,13 @@
                  IsVisible="{Binding HasInstances}">
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
-              <WrapPanel ItemWidth="220" ItemHeight="92" />
+              <WrapPanel ItemWidth="310" ItemHeight="92" />
             </ItemsPanelTemplate>
           </ListBox.ItemsPanel>
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="instances:Instance">
               <Border Classes="InstanceCard" Padding="16">
-                <Grid ColumnDefinitions="Auto,*">
+                <Grid ColumnDefinitions="Auto,*,Auto">
                   <Border Width="48"
                           Height="48"
                           Background="{DynamicResource SurfaceContainerHighest}"
@@ -155,6 +168,21 @@
                                  TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                   </StackPanel>
+                  <Button Grid.Column="2"
+                          Width="32"
+                          Height="32"
+                          Padding="0"
+                          Margin="4,0,0,0"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          ToolTip.Tip="Instance settings"
+                          Click="OnInstanceSettingsClick">
+                    <icons:MaterialIcon Kind="Cog"
+                                        IconSize="18"
+                                        Foreground="{DynamicResource OnSurfaceVariant}" />
+                  </Button>
                 </Grid>
               </Border>
             </DataTemplate>

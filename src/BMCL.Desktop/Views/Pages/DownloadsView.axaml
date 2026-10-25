@@ -102,8 +102,14 @@
                     Spacing="8"
                     VerticalAlignment="Center">
           <Button Classes="Text"
-                  Content="Refresh"
-                  Command="{Binding RefreshCommand}" />
+                  Command="{Binding RefreshCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <icons:MaterialIcon Kind="Refresh"
+                                  IconSize="16"
+                                  Foreground="{DynamicResource Primary}" />
+              <TextBlock Text="Refresh" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
         </StackPanel>
       </Grid>
 
@@ -243,7 +249,7 @@
                         BorderThickness="0"
                         ToolTip.Tip="Version details"
                         Click="OnVersionArrowClick">
-                  <icons:MaterialIcon Kind="ChevronRight"
+                  <icons:MaterialIcon Kind="ArrowRight"
                                       IconSize="18"
                                       Foreground="{DynamicResource OnSurfaceVariant}" />
                 </Button>

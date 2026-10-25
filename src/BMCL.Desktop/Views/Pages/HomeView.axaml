@@ -9,7 +9,7 @@
       <StackPanel Spacing="4">
         <TextBlock Classes="HeadlineSmall" Text="Home" />
         <TextBlock Classes="BodyMedium"
-                   Text="BMCL · Minecraft Launcher"
+                   Text="Hello! Owo"
                    Foreground="{DynamicResource OnSurfaceVariant}" />
       </StackPanel>
 

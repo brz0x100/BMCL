@@ -79,7 +79,7 @@
       <Setter Property="IsEnabled" Value="False" />
       <Setter Property="MinHeight" Value="0" />
       <Setter Property="Padding" Value="12,12,12,4" />
-      <Setter Property="Margin" Value="8,4,8,0" />
+      <Setter Property="Margin" Value="20,4,8,2" />
       <Setter Property="Opacity" Value="1" />
       <Setter Property="Template">
         <ControlTemplate>
@@ -131,8 +131,7 @@
                      Margin="0,16,0,0"
                      SelectedIndex="{Binding SelectedNavigationIndex, Mode=TwoWay}">
               <ListBoxItem Classes="SettingsGroupHeader">
-                <TextBlock Text="Launcher"
-                           Margin="12,0,0,2"/>
+                <TextBlock Text="Launcher"/>
               </ListBoxItem>
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="12">
@@ -156,8 +155,7 @@
               <ListBoxItem Classes="SettingsGroupSeparator" />
 
               <ListBoxItem Classes="SettingsGroupHeader">
-                <TextBlock Text="Game"
-                           Margin="12,0,0,2"/>
+                <TextBlock Text="Game"/>
               </ListBoxItem>
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="12">
@@ -175,8 +173,7 @@
               <ListBoxItem Classes="SettingsGroupSeparator" />
 
               <ListBoxItem Classes="SettingsGroupHeader">
-                <TextBlock Text="Help"
-                           Margin="12,0,0,2"/>
+                <TextBlock Text="Help"/>
               </ListBoxItem>
               <ListBoxItem>
                 <StackPanel Orientation="Horizontal" Spacing="12">

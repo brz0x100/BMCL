@@ -1,0 +1,270 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BMCL.Desktop.ViewModels"
+        xmlns:icons="using:Material.Icons.Avalonia"
+        xmlns:material="using:CCSWE.Avalonia.Material"
+        x:Class="BMCL.Desktop.Views.Dialogs.InstanceSettingsWindow"
+        x:DataType="vm:InstanceSettingsViewModel"
+        Title="Instance Settings"
+        WindowStartupLocation="CenterOwner"
+        WindowDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Foreground="{DynamicResource OnSurface}"
+        CanResize="False"
+        Width="1032"
+        Height="654"
+        ShowInTaskbar="False">
+  <Window.Styles>
+    <Style Selector="ListBox.InstanceTabs">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Vertical" Spacing="0" />
+        </ItemsPanelTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Margin" Value="8,2" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  CornerRadius="22"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="Left"
+                              VerticalContentAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource SurfaceContainerHigh}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource SecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem TextBlock">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem:selected icons|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainer}" />
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem.SettingsGroupHeader">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="IsEnabled" Value="False" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="12,12,12,4" />
+      <Setter Property="Margin" Value="20,4,8,2" />
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Content="{TemplateBinding Content}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.InstanceTabs ListBoxItem.SettingsGroupHeader TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariant}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="24">
+    <Border CornerRadius="8"
+            BoxShadow="0 1 3 0 #2E000000, 0 6 14 0 #4A000000"
+            IsHitTestVisible="False" />
+    <Border Background="{DynamicResource Surface}"
+            BorderBrush="#33808080"
+            BorderThickness="1"
+            CornerRadius="8"
+            ClipToBounds="True">
+      <Panel>
+        <Grid ColumnDefinitions="200,*">
+          <Border Grid.Column="0"
+                  Background="{DynamicResource SurfaceContainerLow}"
+                  BorderBrush="{DynamicResource OutlineVariant}"
+                  BorderThickness="0,0,1,0"
+                  CornerRadius="8,0,0,8">
+            <ListBox Classes="InstanceTabs"
+                     Margin="0,16,0,0"
+                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+              <ListBoxItem Classes="SettingsGroupHeader">
+                <TextBlock Text="{Binding InstanceName}" />
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Cog" IconSize="18" />
+                  <TextBlock Text="Settings" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="CubeOutline" IconSize="18" />
+                  <TextBlock Text="Loaders" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Puzzle" IconSize="18" />
+                  <TextBlock Text="Mods" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Texture" IconSize="18" />
+                  <TextBlock Text="Resource Packs" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Earth" IconSize="18" />
+                  <TextBlock Text="Worlds" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="FileTree" IconSize="18" />
+                  <TextBlock Text="Schematics" />
+                </StackPanel>
+              </ListBoxItem>
+              <ListBoxItem>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <icons:MaterialIcon Kind="Tune" IconSize="18" />
+                  <TextBlock Text="Manage" />
+                </StackPanel>
+              </ListBoxItem>
+            </ListBox>
+          </Border>
+
+          <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+            <StackPanel Grid.Row="0"
+                        Margin="28,24,28,0"
+                        Spacing="4">
+              <TextBlock Classes="HeadlineSmall" Text="{Binding SelectedTabTitle}" />
+              <TextBlock Classes="BodyMedium"
+                         Text="{Binding InstanceDescription}"
+                         Foreground="{DynamicResource OnSurfaceVariant}" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1"
+                          Margin="28,20,28,0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          IsVisible="{Binding IsSettingsTab}">
+              <Border Classes="Card Outlined" Padding="24">
+                <StackPanel Spacing="18">
+                  <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                    <StackPanel Spacing="6">
+                      <TextBlock Classes="LabelMedium" Text="Minimum memory (MB)" />
+                      <NumericUpDown Value="{Binding MinMemoryMb, Mode=TwoWay}"
+                                     Minimum="0"
+                                     Maximum="65536"
+                                     Increment="256" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="6">
+                      <TextBlock Classes="LabelMedium" Text="Maximum memory (MB)" />
+                      <NumericUpDown Value="{Binding MaxMemoryMb, Mode=TwoWay}"
+                                     Minimum="512"
+                                     Maximum="65536"
+                                     Increment="256" />
+                    </StackPanel>
+                  </Grid>
+
+                  <material:Divider />
+
+                  <StackPanel Spacing="6">
+                    <TextBlock Classes="LabelMedium" Text="Instance Isolation" />
+                    <TextBlock Classes="TitleSmall" Text="{Binding IsolationText}" />
+                    <TextBlock Classes="BodySmall"
+                               Text="{Binding IsolationDescription}"
+                               Foreground="{DynamicResource OnSurfaceVariant}"
+                               TextWrapping="Wrap" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </ScrollViewer>
+
+            <Border Grid.Row="1"
+                    Classes="Card Outlined"
+                    Margin="28,20,28,0"
+                    IsVisible="{Binding IsPlaceholderTab}">
+              <StackPanel HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Spacing="10">
+                <icons:MaterialIcon Kind="{Binding PlaceholderIcon}"
+                                    IconSize="48"
+                                    Foreground="{DynamicResource OnSurfaceVariant}" />
+                <TextBlock Classes="TitleMedium"
+                           Text="{Binding SelectedTabTitle}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Classes="BodySmall"
+                           Text="This section will be added in a later milestone."
+                           Foreground="{DynamicResource OnSurfaceVariant}"
+                           TextAlignment="Center" />
+              </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="2"
+                  Margin="28,12,28,24"
+                  ColumnDefinitions="Auto,*"
+                  IsVisible="{Binding IsSettingsTab}">
+              <Button Classes="Filled"
+                      Command="{Binding SaveCommand}"
+                      HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:MaterialIcon Kind="ContentSave"
+                                      IconSize="16"
+                                      Foreground="{DynamicResource OnPrimary}" />
+                  <TextBlock Text="Save Settings" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <TextBlock Grid.Column="1"
+                         Classes="LabelSmall"
+                         Margin="12,0,0,0"
+                         Text="{Binding Status}"
+                         Foreground="{DynamicResource OnSurfaceVariant}"
+                         VerticalAlignment="Center"
+                         TextWrapping="Wrap" />
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Button Theme="{StaticResource CaptionButton}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                ToolTip.Tip="Close"
+                Click="OnCloseClick">
+          <icons:MaterialIcon Kind="WindowClose"
+                              IconSize="14"
+                              Foreground="{DynamicResource OnSurfaceVariant}" />
+        </Button>
+      </Panel>
+    </Border>
+  </Grid>
+</Window>

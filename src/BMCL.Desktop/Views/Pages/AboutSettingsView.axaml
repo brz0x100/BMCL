@@ -18,9 +18,9 @@
                     HorizontalScrollBarVisibility="Disabled">
         <Border Classes="Card Outlined" Padding="24">
           <StackPanel Spacing="10">
-            <TextBlock Classes="TitleLarge" Text="BMCL" />
+            <TextBlock Classes="TitleLarge" Text="breeze256's Minecraft Launcher" />
             <TextBlock Classes="BodyMedium"
-                       Text="A lightweight Minecraft launcher built with Avalonia."
+                       Text="A lightweight Minecraft launcher built with Avalonia. (｡- .•)"
                        Foreground="{DynamicResource OnSurfaceVariant}"
                        TextWrapping="Wrap" />
             <TextBlock Classes="LabelSmall"

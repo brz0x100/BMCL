@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using BMCL.Core.Instances;
+using BMCL.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
@@ -9,11 +10,13 @@ namespace BMCL.Desktop.ViewModels;
 public sealed partial class InstancesViewModel : ViewModelBase
 {
     private readonly InstanceStore _store;
+    private readonly LauncherSettingsService _settings;
     private readonly List<Instance> _allInstances = [];
 
-    public InstancesViewModel(InstanceStore store)
+    public InstancesViewModel(InstanceStore store, LauncherSettingsService settings)
     {
         _store = store;
+        _settings = settings;
         Instances.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasInstances));
     }
 
@@ -99,6 +102,13 @@ public sealed partial class InstancesViewModel : ViewModelBase
         SearchText = "";
         ApplyView(id);
     }
+
+    public InstanceSettingsViewModel CreateSettingsViewModel(Instance instance) =>
+        new(
+            instance,
+            _store,
+            _settings.Settings.MinMemoryMb,
+            _settings.Settings.MaxMemoryMb);
 
     [RelayCommand]
     private Task RefreshAsync(CancellationToken cancellationToken) => LoadAsync(cancellationToken);

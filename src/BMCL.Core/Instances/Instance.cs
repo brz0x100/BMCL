@@ -16,5 +16,7 @@ public sealed record Instance
 
     public string? JavaPath { get; init; }
 
+    public int? MinMemoryMb { get; init; }
+
     public int? MemoryMb { get; init; }
 }
