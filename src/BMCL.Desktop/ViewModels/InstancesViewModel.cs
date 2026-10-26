@@ -72,7 +72,7 @@ public sealed partial class InstancesViewModel : ViewModelBase
 
         try
         {
-            var selectedId = SelectedInstance?.Id;
+            var selectedId = SelectedInstance?.Id ?? _settings.Settings.SelectedInstanceId;
             var instances = await _store.LoadAsync(cancellationToken);
 
             _allInstances.Clear();
@@ -120,6 +120,11 @@ public sealed partial class InstancesViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(DisplayVersion));
+
+        if (value is not null && _settings.IsLoaded)
+        {
+            _ = PersistSelectionAsync(value.Id);
+        }
     }
 
     partial void OnSearchTextChanged(string value) => ApplyView();
@@ -130,6 +135,19 @@ public sealed partial class InstancesViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(SortIcon));
         ApplyView();
+    }
+
+    private async Task PersistSelectionAsync(string id)
+    {
+        try
+        {
+            await _settings.SaveAsync(
+                _settings.Settings with { SelectedInstanceId = id });
+        }
+        catch (Exception exception)
+        {
+            Status = $"Failed to save selected instance: {exception.Message}";
+        }
     }
 
     private void ApplyView(string? preferredId = null)

@@ -158,15 +158,18 @@
                     <TextBlock Classes="TitleSmall"
                                Text="{Binding Name}"
                                TextTrimming="CharacterEllipsis" />
-                    <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
                       <icons:MaterialIcon Kind="GamepadVariant"
                                           IconSize="14"
                                           Foreground="{DynamicResource OnSurfaceVariant}" />
-                      <TextBlock Classes="LabelSmall"
+                      <TextBlock Grid.Column="1"
+                                 Classes="LabelSmall"
                                  Text="{Binding VersionId, StringFormat='Vanilla {0}'}"
                                  Foreground="{DynamicResource OnSurfaceVariant}"
-                                 TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                                 TextTrimming="CharacterEllipsis"
+                                 TextWrapping="NoWrap"
+                                 ToolTip.Tip="{Binding VersionId}" />
+                    </Grid>
                   </StackPanel>
                   <Button Grid.Column="2"
                           Width="32"

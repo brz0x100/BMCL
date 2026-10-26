@@ -205,7 +205,11 @@
                 <StackPanel Spacing="3">
                   <TextBlock Classes="TitleMedium"
                              Text="{Binding AccountName}"
-                             HorizontalAlignment="Center" />
+                             HorizontalAlignment="Stretch"
+                             TextAlignment="Center"
+                             TextTrimming="CharacterEllipsis"
+                             TextWrapping="NoWrap"
+                             ToolTip.Tip="{Binding AccountName}" />
                   <StackPanel Orientation="Horizontal"
                               HorizontalAlignment="Center"
                               Spacing="6">
@@ -245,7 +249,11 @@
                 <StackPanel Spacing="3">
                   <TextBlock Classes="TitleMedium"
                              Text="{Binding InstancesPage.DisplayName}"
-                             HorizontalAlignment="Center" />
+                             HorizontalAlignment="Stretch"
+                             TextAlignment="Center"
+                             TextTrimming="CharacterEllipsis"
+                             TextWrapping="NoWrap"
+                             ToolTip.Tip="{Binding InstancesPage.DisplayName}" />
                   <StackPanel Orientation="Horizontal"
                               HorizontalAlignment="Center"
                               Spacing="6">
@@ -256,8 +264,11 @@
                                Text="{Binding InstancesPage.DisplayVersion, StringFormat='Vanilla {0}'}"
                                Foreground="{DynamicResource OnSurfaceVariant}"
                                TextAlignment="Center"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center" />
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="200"
+                               HorizontalAlignment="Center"
+                               ToolTip.Tip="{Binding InstancesPage.DisplayVersion}" />
                   </StackPanel>
                 </StackPanel>
                 <Button Classes="Text"
