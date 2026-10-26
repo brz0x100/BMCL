@@ -14,6 +14,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         PropertyChanged += OnWindowPropertyChanged;
+        PositionChanged += (_, _) => UpdateWindowEdgeMargins();
+        Opened += (_, _) => UpdateWindowEdgeMargins();
         SetupResizeCursors();
         UpdateWindowStateVisuals();
     }
@@ -35,11 +37,6 @@ public partial class MainWindow : Window
             MaximizeIcon.Kind = isMaximized
                 ? MaterialIconKind.WindowRestore
                 : MaterialIconKind.WindowMaximize;
-        }
-
-        if (RootBorder is not null)
-        {
-            RootBorder.Margin = isMaximized ? default : new Thickness(24);
         }
 
         if (TopBarBackground is not null)
@@ -84,6 +81,32 @@ public partial class MainWindow : Window
         {
             ResizeGripLayer.IsVisible = !isMaximized;
         }
+
+        UpdateWindowEdgeMargins();
+    }
+
+    private void UpdateWindowEdgeMargins()
+    {
+        if (RootBorder is null || ShadowBorder is null || EdgeBorder is null)
+        {
+            return;
+        }
+
+        if (WindowState is WindowState.Maximized or WindowState.FullScreen)
+        {
+            RootBorder.Margin = default;
+            ShadowBorder.Margin = default;
+            EdgeBorder.Margin = default;
+            return;
+        }
+
+        var screen = Screens.ScreenFromWindow(this);
+        var top = screen?.WorkingArea.Y ?? 0;
+        var isAtTop = Position.Y <= top + 1;
+        var margin = new Thickness(24, isAtTop ? 0 : 12, 24, 24);
+        RootBorder.Margin = margin;
+        ShadowBorder.Margin = margin;
+        EdgeBorder.Margin = margin;
     }
 
     private void SetupResizeCursors()

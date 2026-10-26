@@ -43,12 +43,12 @@
 
   <Grid>
     <Border x:Name="ShadowBorder"
-            Margin="24"
+            Margin="24,12,24,24"
             CornerRadius="8"
             BoxShadow="0 1 3 0 #2E000000, 0 6 14 0 #4A000000"
             IsHitTestVisible="False" />
     <Border x:Name="RootBorder"
-            Margin="24"
+            Margin="24,12,24,24"
             Background="Transparent"
             ZIndex="1">
       <Grid RowDefinitions="40,*" ColumnDefinitions="80,*,Auto">
@@ -319,7 +319,7 @@
   </Border>
 
     <Border x:Name="EdgeBorder"
-            Margin="24"
+            Margin="24,12,24,24"
             CornerRadius="8"
             BorderThickness="1"
             BorderBrush="#33808080"
@@ -328,7 +328,7 @@
             ZIndex="2" />
 
   <Grid x:Name="ResizeGripLayer"
-        Margin="6"
+        Margin="12, 6, 12, 12"
         ColumnDefinitions="14,*,14"
         RowDefinitions="14,*,14">
     <Border x:Name="ResizeTopLeft" Grid.Row="0" Grid.Column="0" Background="Transparent" Tag="TopLeft" PointerPressed="OnResizePressed" />
