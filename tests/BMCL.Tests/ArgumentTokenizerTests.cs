@@ -22,6 +22,30 @@ public sealed class ArgumentTokenizerTests
     }
 
     [Fact]
+    public void PreservesBackslashesInWindowsPaths()
+    {
+        Assert.Equal(
+            new[] { "--gameDir", @"C:\Games\.minecraft" },
+            ArgumentTokenizer.Split(@"--gameDir C:\Games\.minecraft"));
+    }
+
+    [Fact]
+    public void PreservesEmptyQuotedArguments()
+    {
+        Assert.Equal(
+            new[] { "--title", "" },
+            ArgumentTokenizer.Split("--title \"\""));
+    }
+
+    [Fact]
+    public void SupportsEscapedQuotes()
+    {
+        Assert.Equal(
+            new[] { "--title", "Hello \"World\"" },
+            ArgumentTokenizer.Split("--title \"Hello \\\"World\\\"\""));
+    }
+
+    [Fact]
     public void ReturnsEmptyForBlankInput()
     {
         Assert.Empty(ArgumentTokenizer.Split("   "));

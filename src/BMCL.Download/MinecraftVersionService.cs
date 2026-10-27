@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BMCL.Core.Configuration;
+using BMCL.Core.IO;
 using BMCL.Core.Minecraft;
 
 namespace BMCL.Download;
@@ -45,21 +46,62 @@ public sealed class MinecraftVersionService
         }
     }
 
-    public async Task<VersionDetail> GetVersionAsync(
+    public Task<VersionDetail> GetVersionAsync(
         string id,
         bool forceRefresh = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetVersionAsync(
+            id,
+            forceRefresh,
+            new HashSet<string>(StringComparer.Ordinal),
+            cancellationToken);
+
+    private async Task<VersionDetail> GetVersionAsync(
+        string id,
+        bool forceRefresh,
+        HashSet<string> resolvingVersions,
+        CancellationToken cancellationToken)
     {
-        ValidateVersionId(id);
+        PathSafety.ValidateFileName(id, nameof(id), "version id");
 
-        var versionDirectory = Path.Combine(_paths.Versions, id);
-        var versionFile = Path.Combine(versionDirectory, $"{id}.json");
-
-        if (!forceRefresh && await TryReadVersionAsync(versionFile, cancellationToken) is { } cached)
+        if (!resolvingVersions.Add(id))
         {
-            return cached;
+            throw new InvalidDataException($"The version inheritance chain contains a cycle at '{id}'.");
         }
 
+        try
+        {
+            var versionDirectory = Path.Combine(_paths.VersionsDirectory, id);
+            var versionFile = Path.Combine(versionDirectory, $"{id}.json");
+
+            var version = !forceRefresh &&
+                          await TryReadVersionAsync(versionFile, cancellationToken) is { } cached
+                ? cached
+                : await DownloadVersionAsync(id, versionFile, cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(version.InheritsFrom))
+            {
+                return version;
+            }
+
+            var parent = await GetVersionAsync(
+                version.InheritsFrom,
+                forceRefresh,
+                resolvingVersions,
+                cancellationToken);
+            return VersionDetailMerger.Merge(parent, version);
+        }
+        finally
+        {
+            resolvingVersions.Remove(id);
+        }
+    }
+
+    private async Task<VersionDetail> DownloadVersionAsync(
+        string id,
+        string versionFile,
+        CancellationToken cancellationToken)
+    {
         var manifest = await GetManifestAsync(false, cancellationToken);
         var summary = manifest.Versions.FirstOrDefault(
             version => string.Equals(version.Id, id, StringComparison.Ordinal))
@@ -74,41 +116,22 @@ public sealed class MinecraftVersionService
         var detail = JsonSerializer.Deserialize<VersionDetail>(json, MinecraftJson.Options)
             ?? throw new InvalidDataException($"Version '{id}' could not be parsed.");
 
-        Directory.CreateDirectory(versionDirectory);
-        await WriteFileAtomicallyAsync(versionFile, json, cancellationToken);
+        await AtomicFile.WriteAllTextAsync(versionFile, json, cancellationToken);
         return detail;
-    }
-
-    private static void ValidateVersionId(string id)
-    {
-        if (string.IsNullOrWhiteSpace(id) ||
-            id.Contains("..", StringComparison.Ordinal) ||
-            id.Contains('/', StringComparison.Ordinal) ||
-            id.Contains('\\', StringComparison.Ordinal) ||
-            id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-        {
-            throw new ArgumentException("The version id is not a valid directory name.", nameof(id));
-        }
     }
 
     private static async Task<VersionDetail?> TryReadVersionAsync(
         string path,
         CancellationToken cancellationToken)
     {
-        if (!File.Exists(path))
-        {
-            return null;
-        }
-
         try
         {
-            await using var stream = File.OpenRead(path);
-            return await JsonSerializer.DeserializeAsync<VersionDetail>(
-                stream,
+            return await JsonFile.ReadAsync<VersionDetail>(
+                path,
                 MinecraftJson.Options,
                 cancellationToken);
         }
-        catch (JsonException)
+        catch (InvalidDataException)
         {
             return null;
         }
@@ -122,25 +145,5 @@ public sealed class MinecraftVersionService
             cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
-    }
-
-    private static async Task WriteFileAtomicallyAsync(
-        string path,
-        string content,
-        CancellationToken cancellationToken)
-    {
-        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, content, cancellationToken);
-            File.Move(temporaryPath, path, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
     }
 }

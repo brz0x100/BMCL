@@ -21,7 +21,7 @@ public sealed class MinecraftInstallerTests : IDisposable
     {
         var paths = new LauncherPaths(_root);
         paths.EnsureCreated();
-        var versionDirectory = Path.Combine(paths.Versions, "test-version");
+        var versionDirectory = Path.Combine(paths.VersionsDirectory, "test-version");
         Directory.CreateDirectory(versionDirectory);
         var version = CreateVersion();
         await File.WriteAllTextAsync(
@@ -51,13 +51,14 @@ public sealed class MinecraftInstallerTests : IDisposable
         Assert.Equal("test-version", instance.VersionId);
         Assert.Equal("My Test Instance", instance.Name);
         Assert.True(instance.Isolated);
-        Assert.True(File.Exists(Path.Combine(paths.Versions, instance.Id, "instance.json")));
-        Assert.True(File.Exists(Path.Combine(paths.Versions, "test-version", "test-version.jar")));
-        Assert.True(File.Exists(Path.Combine(paths.Libraries, "org/example/demo/1.0/demo-1.0.jar")));
-        Assert.True(File.Exists(Path.Combine(paths.Versions, instance.Id, "natives", "native.txt")));
-        Assert.True(File.Exists(Path.Combine(paths.Assets, "indexes", "test-index.json")));
-        Assert.True(File.Exists(Path.Combine(paths.Assets, "objects", "00", new string('0', 40))));
-        Assert.True(File.Exists(Path.Combine(paths.Assets, "log_configs", "client.xml")));
+        Assert.True(File.Exists(Path.Combine(paths.VersionsDirectory, instance.Id, "instance.json")));
+        Assert.True(File.Exists(Path.Combine(paths.VersionsDirectory, "test-version", "test-version.jar")));
+        Assert.True(File.Exists(Path.Combine(paths.LibrariesDirectory, "org/example/demo/1.0/demo-1.0.jar")));
+        Assert.True(File.Exists(Path.Combine(paths.LibrariesDirectory, "org/example/legacy/2.0/legacy-2.0.jar")));
+        Assert.True(File.Exists(Path.Combine(paths.VersionsDirectory, instance.Id, "natives", "native.txt")));
+        Assert.True(File.Exists(Path.Combine(paths.AssetsDirectory, "indexes", "test-index.json")));
+        Assert.True(File.Exists(Path.Combine(paths.AssetsDirectory, "objects", "00", new string('0', 40))));
+        Assert.True(File.Exists(Path.Combine(paths.AssetsDirectory, "log_configs", "client.xml")));
         Assert.NotEmpty(progress);
 
         var shared = await installer.InstallAsync(
@@ -67,7 +68,48 @@ public sealed class MinecraftInstallerTests : IDisposable
             new Progress<InstallProgress>(_ => { }));
 
         Assert.False(shared.Isolated);
-        Assert.True(File.Exists(Path.Combine(paths.MinecraftRoot, "natives", "native.txt")));
+        Assert.True(File.Exists(Path.Combine(paths.MinecraftDirectory, "natives", "native.txt")));
+    }
+
+    [Fact]
+    public async Task FailedInstallDoesNotExposePartialVersionAndCanBeRetried()
+    {
+        var paths = new LauncherPaths(_root);
+        paths.EnsureCreated();
+        var versionDirectory = Path.Combine(paths.VersionsDirectory, "test-version");
+        Directory.CreateDirectory(versionDirectory);
+        await File.WriteAllTextAsync(
+            Path.Combine(versionDirectory, "test-version.json"),
+            JsonSerializer.Serialize(CreateVersion(), MinecraftJson.Options));
+
+        var versionService = new MinecraftVersionService(
+            new HttpClient(),
+            paths,
+            new IdentityMirrorUrlMapper());
+        var instanceStore = new InstanceStore(paths);
+        var failingInstaller = new MinecraftInstaller(
+            versionService,
+            new ThrowingDownloadService(),
+            paths,
+            instanceStore);
+
+        await Assert.ThrowsAsync<IOException>(() => failingInstaller.InstallAsync("test-version"));
+        Assert.Empty(await instanceStore.LoadAsync());
+
+        var installer = new MinecraftInstaller(
+            versionService,
+            new FakeDownloadService(),
+            paths,
+            instanceStore);
+
+        var instance = await installer.InstallAsync("test-version");
+
+        var loaded = Assert.Single(await instanceStore.LoadAsync());
+        Assert.Equal(instance, loaded);
+        Assert.False(File.Exists(Path.Combine(
+            paths.VersionsDirectory,
+            "test-version",
+            InstanceStore.InstallationMarkerFileName)));
     }
 
     public void Dispose()
@@ -116,6 +158,10 @@ public sealed class MinecraftInstallerTests : IDisposable
                 },
                 new MinecraftLibrary
                 {
+                    Name = "org.example:legacy:2.0",
+                },
+                new MinecraftLibrary
+                {
                     Name = "org.example:native:1.0",
                     Natives = new Dictionary<string, string>
                     {
@@ -161,6 +207,21 @@ public sealed class MinecraftInstallerTests : IDisposable
                 Game = [new VersionArgument(["--username", "${auth_player_name}"], [])],
             },
         };
+    }
+
+    private sealed class ThrowingDownloadService : IDownloadService
+    {
+        public Task<DownloadResult> DownloadAsync(
+            IReadOnlyList<DownloadItem> items,
+            IProgress<DownloadProgress>? progress = null,
+            CancellationToken cancellationToken = default) =>
+            throw new IOException("Simulated download failure.");
+
+        public Task<bool> VerifyAsync(
+            string path,
+            string sha1,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
     }
 
     private sealed class FakeDownloadService : IDownloadService

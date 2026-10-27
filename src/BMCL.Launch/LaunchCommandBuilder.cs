@@ -1,4 +1,5 @@
 using BMCL.Auth;
+using BMCL.Core.IO;
 using BMCL.Core.Minecraft;
 
 namespace BMCL.Launch;
@@ -176,26 +177,15 @@ public sealed class LaunchCommandBuilder
 
         foreach (var library in version.Libraries)
         {
-            if (!RuleEvaluator.IsAllowed(library.Rules, context))
+            if (!RuleEvaluator.IsAllowed(library.Rules, context) ||
+                LibraryFileResolver.ResolveArtifact(library) is not { } file)
             {
                 continue;
             }
 
-            var artifact = library.Downloads?.Artifact;
-            if (artifact is null)
-            {
-                continue;
-            }
-
-            var relativePath = artifact.Path ?? MavenPath.ToRelativePath(library.Name);
-            if (relativePath is null)
-            {
-                continue;
-            }
-
-            entries.Add(Path.Combine(
+            entries.Add(PathSafety.CombineUnderRoot(
                 options.LibrariesDirectory,
-                relativePath.Replace('/', Path.DirectorySeparatorChar)));
+                file.RelativePath));
         }
 
         return string.Join(Path.PathSeparator, entries);

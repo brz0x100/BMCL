@@ -21,14 +21,40 @@ public sealed class LauncherSettingsService : ObservableObject
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        Settings = await _store.LoadAsync(cancellationToken);
-        if (!File.Exists(_store.FilePath))
+        Exception? loadError = null;
+
+        await _saveLock.WaitAsync(cancellationToken);
+        try
         {
-            await _store.SaveAsync(Settings, cancellationToken);
+            try
+            {
+                Settings = await _store.LoadAsync(cancellationToken);
+            }
+            catch (InvalidDataException exception)
+            {
+                Settings = new LauncherSettings();
+                loadError = exception;
+            }
+
+            if (!File.Exists(_store.FilePath))
+            {
+                await _store.SaveAsync(Settings, cancellationToken);
+            }
+        }
+        finally
+        {
+            _saveLock.Release();
         }
 
         IsLoaded = true;
         NotifyChanged();
+
+        if (loadError is not null)
+        {
+            throw new InvalidDataException(
+                "The settings file could not be read; defaults are being used.",
+                loadError);
+        }
     }
 
     public async Task SaveAsync(

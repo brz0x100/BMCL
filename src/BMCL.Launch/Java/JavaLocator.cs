@@ -85,12 +85,19 @@ public sealed class JavaLocator : IJavaLocator
                 return null;
             }
 
-            var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
-            var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
-            await process.WaitForExitAsync(timeout.Token);
+            try
+            {
+                var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
+                var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
+                await process.WaitForExitAsync(timeout.Token);
 
-            var output = string.Concat(await stdout, await stderr);
-            return Parse(path, output);
+                var output = string.Concat(await stdout, await stderr);
+                return Parse(path, output);
+            }
+            finally
+            {
+                TryKill(process);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -105,6 +112,21 @@ public sealed class JavaLocator : IJavaLocator
             exception is Win32Exception or InvalidOperationException or IOException)
         {
             return null;
+        }
+    }
+
+    private static void TryKill(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or NotSupportedException or Win32Exception)
+        {
         }
     }
 

@@ -29,7 +29,7 @@
             <StackPanel Spacing="4">
               <TextBlock Classes="LabelMedium" Text="Configuration file" />
               <TextBlock Classes="BodySmall"
-                         Text="{Binding ConfigFile}"
+                         Text="{Binding ConfigFilePath}"
                          Foreground="{DynamicResource OnSurfaceVariant}"
                          TextWrapping="Wrap" />
             </StackPanel>

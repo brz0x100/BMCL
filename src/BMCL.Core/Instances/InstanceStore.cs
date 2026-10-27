@@ -1,10 +1,13 @@
 using System.Text.Json;
 using BMCL.Core.Configuration;
+using BMCL.Core.IO;
 
 namespace BMCL.Core.Instances;
 
 public sealed class InstanceStore
 {
+    public const string InstallationMarkerFileName = ".installing";
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -20,7 +23,7 @@ public sealed class InstanceStore
 
     public async Task<IReadOnlyList<Instance>> LoadAsync(CancellationToken cancellationToken = default)
     {
-        var root = _paths.Versions;
+        var root = _paths.VersionsDirectory;
         if (!Directory.Exists(root))
         {
             return [];
@@ -37,7 +40,10 @@ public sealed class InstanceStore
             if (instance is null)
             {
                 var versionFile = Path.Combine(directory, $"{id}.json");
-                if (!File.Exists(versionFile))
+                var hasLocalData = HasLocalGameData(directory);
+                if (!File.Exists(versionFile) ||
+                    File.Exists(Path.Combine(directory, InstallationMarkerFileName)) ||
+                    (!hasLocalData && !File.Exists(Path.Combine(directory, $"{id}.jar"))))
                 {
                     continue;
                 }
@@ -47,7 +53,7 @@ public sealed class InstanceStore
                     Id = id,
                     Name = id,
                     VersionId = id,
-                    Isolated = HasLocalGameData(directory),
+                    Isolated = hasLocalData,
                 };
             }
 
@@ -66,29 +72,11 @@ public sealed class InstanceStore
 
     public async Task SaveAsync(Instance instance, CancellationToken cancellationToken = default)
     {
-        ValidateId(instance.Id);
+        PathSafety.ValidateFileName(instance.Id, nameof(instance), "instance id");
 
-        var directory = Path.Combine(_paths.Versions, instance.Id);
-        Directory.CreateDirectory(directory);
-
+        var directory = Path.Combine(_paths.VersionsDirectory, instance.Id);
         var metadataPath = Path.Combine(directory, "instance.json");
-        var temporaryPath = $"{metadataPath}.{Guid.NewGuid():N}.tmp";
-        try
-        {
-            await using (var stream = File.Create(temporaryPath))
-            {
-                await JsonSerializer.SerializeAsync(stream, instance, JsonOptions, cancellationToken);
-            }
-
-            File.Move(temporaryPath, metadataPath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
+        await JsonFile.WriteAsync(metadataPath, instance, JsonOptions, cancellationToken);
     }
 
     private static async Task<Instance?> TryReadInstanceAsync(
@@ -102,13 +90,9 @@ public sealed class InstanceStore
 
         try
         {
-            await using var stream = File.OpenRead(path);
-            return await JsonSerializer.DeserializeAsync<Instance>(
-                stream,
-                JsonOptions,
-                cancellationToken);
+            return await JsonFile.ReadAsync<Instance>(path, JsonOptions, cancellationToken);
         }
-        catch (JsonException)
+        catch (InvalidDataException)
         {
             return null;
         }
@@ -121,16 +105,4 @@ public sealed class InstanceStore
         Directory.Exists(Path.Combine(directory, "config")) ||
         Directory.Exists(Path.Combine(directory, "resourcepacks")) ||
         Directory.Exists(Path.Combine(directory, "shaderpacks"));
-
-    private static void ValidateId(string id)
-    {
-        if (string.IsNullOrWhiteSpace(id) ||
-            id.Contains("..", StringComparison.Ordinal) ||
-            id.Contains('/', StringComparison.Ordinal) ||
-            id.Contains('\\', StringComparison.Ordinal) ||
-            id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-        {
-            throw new ArgumentException("The instance id is not a valid directory name.", nameof(id));
-        }
-    }
 }

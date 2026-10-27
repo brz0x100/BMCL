@@ -22,6 +22,7 @@ public sealed class LaunchCommandBuilderTests
         var classpathIndex = arguments.IndexOf("-cp");
         Assert.True(classpathIndex >= 0);
         Assert.Contains("demo-1.0.jar", arguments[classpathIndex + 1]);
+        Assert.Contains("legacy-2.0.jar", arguments[classpathIndex + 1]);
         Assert.DoesNotContain(
             command.Arguments,
             argument => argument.Contains("never-matches.jar", StringComparison.Ordinal));
@@ -146,7 +147,12 @@ public sealed class LaunchCommandBuilderTests
             Type = "release",
             MainClass = "net.minecraft.client.main.Main",
             AssetIndex = new AssetIndex { Id = "5", Url = "https://example.invalid/5.json" },
-            Libraries = [library, excludedLibrary],
+            Libraries =
+            [
+                library,
+                new MinecraftLibrary { Name = "com.example:legacy:2.0" },
+                excludedLibrary,
+            ],
             Arguments = new VersionArguments
             {
                 Game = [new VersionArgument(["--username", "${auth_player_name}"], [])],

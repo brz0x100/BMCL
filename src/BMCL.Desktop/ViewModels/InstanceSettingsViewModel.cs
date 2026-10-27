@@ -7,26 +7,17 @@ namespace BMCL.Desktop.ViewModels;
 
 public sealed partial class InstanceSettingsViewModel : ViewModelBase
 {
-    private static readonly string[] TabTitles =
-    [
-        "Settings",
-        "Loaders",
-        "Mods",
-        "Resource Packs",
-        "Worlds",
-        "Schematics",
-        "Manage",
-    ];
+    private readonly record struct TabDefinition(string Title, MaterialIconKind Icon);
 
-    private static readonly MaterialIconKind[] TabIcons =
+    private static readonly TabDefinition[] Tabs =
     [
-        MaterialIconKind.Cog,
-        MaterialIconKind.CubeOutline,
-        MaterialIconKind.Puzzle,
-        MaterialIconKind.Texture,
-        MaterialIconKind.Earth,
-        MaterialIconKind.FileTree,
-        MaterialIconKind.Tune,
+        new("Settings", MaterialIconKind.Cog),
+        new("Loaders", MaterialIconKind.CubeOutline),
+        new("Mods", MaterialIconKind.Puzzle),
+        new("Resource Packs", MaterialIconKind.Texture),
+        new("Worlds", MaterialIconKind.Earth),
+        new("Schematics", MaterialIconKind.FileTree),
+        new("Manage", MaterialIconKind.Tune),
     ];
 
     private readonly InstanceStore _store;
@@ -62,11 +53,12 @@ public sealed partial class InstanceSettingsViewModel : ViewModelBase
 
     public bool IsPlaceholderTab => !IsSettingsTab;
 
-    public string SelectedTabTitle =>
-        TabTitles[Math.Clamp(SelectedTabIndex - 1, 0, TabTitles.Length - 1)];
+    private TabDefinition SelectedTab =>
+        Tabs[Math.Clamp(SelectedTabIndex - 1, 0, Tabs.Length - 1)];
 
-    public MaterialIconKind PlaceholderIcon =>
-        TabIcons[Math.Clamp(SelectedTabIndex - 1, 0, TabIcons.Length - 1)];
+    public string SelectedTabTitle => SelectedTab.Title;
+
+    public MaterialIconKind PlaceholderIcon => SelectedTab.Icon;
 
     [ObservableProperty]
     private int _selectedTabIndex = 1;
@@ -108,6 +100,10 @@ public sealed partial class InstanceSettingsViewModel : ViewModelBase
             };
             await _store.SaveAsync(_instance, cancellationToken);
             Status = "Settings saved.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Saving settings was canceled.";
         }
         catch (Exception exception)
         {

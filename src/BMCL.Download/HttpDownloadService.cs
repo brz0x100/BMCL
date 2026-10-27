@@ -6,21 +6,28 @@ public sealed class HttpDownloadService : IDownloadService
 {
     private readonly HttpClient _httpClient;
     private readonly IMirrorUrlMapper _mirror;
-    private readonly int _maxConcurrency;
+    private readonly Func<int> _maxConcurrency;
 
     public HttpDownloadService(
         HttpClient httpClient,
         IMirrorUrlMapper mirror,
         int maxConcurrency = 8)
+        : this(httpClient, mirror, () => maxConcurrency)
     {
         if (maxConcurrency < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(maxConcurrency));
         }
+    }
 
-        _httpClient = httpClient;
-        _mirror = mirror;
-        _maxConcurrency = maxConcurrency;
+    public HttpDownloadService(
+        HttpClient httpClient,
+        IMirrorUrlMapper mirror,
+        Func<int> maxConcurrency)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
+        _maxConcurrency = maxConcurrency ?? throw new ArgumentNullException(nameof(maxConcurrency));
     }
 
     public async Task<DownloadResult> DownloadAsync(
@@ -35,6 +42,12 @@ public sealed class HttpDownloadService : IDownloadService
             return new DownloadResult(0, 0);
         }
 
+        var maxConcurrency = _maxConcurrency();
+        if (maxConcurrency < 1)
+        {
+            throw new InvalidOperationException("The maximum download concurrency must be at least one.");
+        }
+
         var downloaded = 0;
         var skipped = 0;
         var completed = 0;
@@ -43,7 +56,7 @@ public sealed class HttpDownloadService : IDownloadService
             items,
             new ParallelOptions
             {
-                MaxDegreeOfParallelism = _maxConcurrency,
+                MaxDegreeOfParallelism = maxConcurrency,
                 CancellationToken = cancellationToken,
             },
             async (item, token) =>
@@ -114,9 +127,15 @@ public sealed class HttpDownloadService : IDownloadService
                 await source.CopyToAsync(target, cancellationToken);
             }
 
-            if (item.Sha1 is { Length: > 0 } expected && !await VerifyAsync(temporaryPath, expected, cancellationToken))
+            if (item.Sha1 is { Length: > 0 } expected &&
+                !await VerifyAsync(temporaryPath, expected, cancellationToken))
             {
                 throw new InvalidDataException($"SHA-1 mismatch for {Path.GetFileName(destination)}.");
+            }
+
+            if (item.Size is { } size && new FileInfo(temporaryPath).Length != size)
+            {
+                throw new InvalidDataException($"Size mismatch for {Path.GetFileName(destination)}.");
             }
 
             File.Move(temporaryPath, destination, overwrite: true);
@@ -136,16 +155,12 @@ public sealed class HttpDownloadService : IDownloadService
         DownloadItem item,
         CancellationToken cancellationToken)
     {
-        if (item.Sha1 is not { Length: > 0 })
-        {
-            return true;
-        }
-
         if (item.Size is { } size && new FileInfo(path).Length != size)
         {
             return false;
         }
 
-        return await VerifyAsync(path, item.Sha1, cancellationToken);
+        return item.Sha1 is not { Length: > 0 } ||
+               await VerifyAsync(path, item.Sha1, cancellationToken);
     }
 }

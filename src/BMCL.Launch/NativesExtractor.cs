@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using BMCL.Core.IO;
 using BMCL.Core.Minecraft;
 
 namespace BMCL.Launch;
@@ -25,22 +26,21 @@ public static class NativesExtractor
         foreach (var library in version.Libraries)
         {
             if (!RuleEvaluator.IsAllowed(library.Rules, context) ||
-                library.Natives is null ||
-                !library.Natives.TryGetValue(context.OsName, out var classifier))
+                LibraryFileResolver.ResolveNative(library, context.OsName) is not { } file)
             {
                 continue;
             }
 
-            var artifact = library.Downloads?.Classifiers?.GetValueOrDefault(classifier);
-            var relativePath = artifact?.Path ?? MavenPath.ToRelativePath(library.Name, classifier);
-            if (relativePath is null)
+            string jarPath;
+            try
+            {
+                jarPath = PathSafety.CombineUnderRoot(librariesRoot, file.RelativePath);
+            }
+            catch (InvalidDataException)
             {
                 continue;
             }
 
-            var jarPath = Path.GetFullPath(Path.Combine(
-                librariesRoot,
-                relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!jarPath.StartsWith(librariesRoot + Path.DirectorySeparatorChar, comparison) ||
                 !File.Exists(jarPath))
             {

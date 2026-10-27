@@ -14,44 +14,50 @@ public static class ArgumentTokenizer
         var result = new List<string>();
         var current = new StringBuilder();
         var inQuotes = false;
-        var escaped = false;
+        var hasToken = false;
+        var index = 0;
 
-        foreach (var character in input)
+        while (index < input.Length)
         {
-            if (escaped)
+            var character = input[index];
+
+            if (character == '"')
             {
-                current.Append(character);
-                escaped = false;
+                inQuotes = !inQuotes;
+                hasToken = true;
+                index++;
                 continue;
             }
 
-            switch (character)
+            if (!inQuotes && char.IsWhiteSpace(character))
             {
-                case '\\':
-                    escaped = true;
-                    break;
-                case '"':
-                    inQuotes = !inQuotes;
-                    break;
-                default:
-                    if (char.IsWhiteSpace(character) && !inQuotes)
-                    {
-                        if (current.Length > 0)
-                        {
-                            result.Add(current.ToString());
-                            current.Clear();
-                        }
-                    }
-                    else
-                    {
-                        current.Append(character);
-                    }
+                if (hasToken)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                    hasToken = false;
+                }
 
-                    break;
+                index++;
+                continue;
             }
+
+            if (character == '\\' &&
+                index + 1 < input.Length &&
+                input[index + 1] == '"')
+            {
+                current.Append('"');
+                hasToken = true;
+                index += 2;
+                continue;
+            }
+
+            current.Append(character);
+            hasToken = true;
+            index++;
         }
 
-        if (current.Length > 0)
+        if (hasToken)
         {
             result.Add(current.ToString());
         }

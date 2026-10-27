@@ -32,7 +32,7 @@ public sealed class InstanceStoreTests : IDisposable
         var loaded = Assert.Single(await store.LoadAsync());
 
         Assert.Equal(instance, loaded);
-        Assert.True(File.Exists(Path.Combine(paths.Versions, "survival", "instance.json")));
+        Assert.True(File.Exists(Path.Combine(paths.VersionsDirectory, "survival", "instance.json")));
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class InstanceStoreTests : IDisposable
     public async Task LoadsStandardVersionFolderWithoutMetadata()
     {
         var paths = new LauncherPaths(_root);
-        var versionDirectory = Path.Combine(paths.Versions, "1.20.1");
+        var versionDirectory = Path.Combine(paths.VersionsDirectory, "1.20.1");
         Directory.CreateDirectory(versionDirectory);
         await File.WriteAllTextAsync(
             Path.Combine(versionDirectory, "1.20.1.json"),
@@ -81,6 +81,19 @@ public sealed class InstanceStoreTests : IDisposable
         Assert.Equal("1.20.1", loaded.Id);
         Assert.Equal("1.20.1", loaded.VersionId);
         Assert.True(loaded.Isolated);
+    }
+
+    [Fact]
+    public async Task IgnoresVersionMetadataWithoutClientJar()
+    {
+        var paths = new LauncherPaths(_root);
+        var versionDirectory = Path.Combine(paths.VersionsDirectory, "1.20.1");
+        Directory.CreateDirectory(versionDirectory);
+        await File.WriteAllTextAsync(
+            Path.Combine(versionDirectory, "1.20.1.json"),
+            """{"id":"1.20.1"}""");
+
+        Assert.Empty(await new InstanceStore(paths).LoadAsync());
     }
 
     [Fact]

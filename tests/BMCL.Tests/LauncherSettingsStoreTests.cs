@@ -34,7 +34,7 @@ public sealed class LauncherSettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public void SettingsFileUsesSeparateConfigRoot()
+    public void SettingsFileUsesSeparateConfigDirectory()
     {
         var dataRoot = Path.Combine(_root, "data");
         var configRoot = Path.Combine(_root, "config");
@@ -46,7 +46,7 @@ public sealed class LauncherSettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveWritesConfigurationToConfigRootOnly()
+    public async Task SaveWritesConfigurationToConfigDirectoryOnly()
     {
         var dataRoot = Path.Combine(_root, "data");
         var configRoot = Path.Combine(_root, "config");

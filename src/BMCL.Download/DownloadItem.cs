@@ -4,6 +4,13 @@ public sealed record DownloadItem
 {
     public DownloadItem(Uri url, string destination, string? sha1 = null, long? size = null)
     {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destination);
+        if (size is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(size));
+        }
+
         Url = url;
         Destination = destination;
         Sha1 = sha1;

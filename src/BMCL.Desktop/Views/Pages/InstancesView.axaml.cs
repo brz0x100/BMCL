@@ -49,6 +49,10 @@ public partial class InstancesView : UserControl
             await viewModel.LoadAsync();
             viewModel.SelectInstance(instance.Id);
         }
+        catch (Exception exception)
+        {
+            viewModel.Status = $"Failed to open instance settings: {exception.Message}";
+        }
         finally
         {
             if (shell is not null)

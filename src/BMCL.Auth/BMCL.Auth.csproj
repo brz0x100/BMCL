@@ -3,4 +3,7 @@
     <RootNamespace>BMCL.Auth</RootNamespace>
     <AssemblyName>BMCL.Auth</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../BMCL.Core/BMCL.Core.csproj" />
+  </ItemGroup>
 </Project>

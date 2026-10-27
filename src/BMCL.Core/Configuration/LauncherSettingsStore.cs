@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BMCL.Core.IO;
 
 namespace BMCL.Core.Configuration;
 
@@ -9,10 +10,10 @@ public sealed class LauncherSettingsStore
 
     public LauncherSettingsStore(LauncherPaths paths)
     {
-        FilePath = paths.ConfigFile;
-        LegacyFilePath = paths.Root == paths.ConfigRoot
+        FilePath = paths.ConfigFilePath;
+        LegacyFilePath = paths.RootDirectory == paths.ConfigDirectory
             ? null
-            : Path.Combine(paths.Root, "config.json");
+            : Path.Combine(paths.RootDirectory, "config.json");
     }
 
     public string FilePath { get; }
@@ -22,51 +23,19 @@ public sealed class LauncherSettingsStore
     public async Task<LauncherSettings> LoadAsync(CancellationToken cancellationToken = default)
     {
         var sourcePath = File.Exists(FilePath) ? FilePath : LegacyFilePath;
-        if (sourcePath is null || !File.Exists(sourcePath))
+        if (sourcePath is null)
         {
             return new LauncherSettings();
         }
 
-        await using var stream = File.OpenRead(sourcePath);
-        try
-        {
-            return await JsonSerializer.DeserializeAsync<LauncherSettings>(
-                stream,
-                JsonOptions,
-                cancellationToken) ?? new LauncherSettings();
-        }
-        catch (JsonException exception)
-        {
-            throw new InvalidDataException($"The launcher configuration is invalid: {sourcePath}", exception);
-        }
+        return await JsonFile.ReadAsync<LauncherSettings>(sourcePath, JsonOptions, cancellationToken)
+               ?? new LauncherSettings();
     }
 
-    public async Task SaveAsync(
+    public Task SaveAsync(
         LauncherSettings settings,
-        CancellationToken cancellationToken = default)
-    {
-        var directory = Path.GetDirectoryName(FilePath)
-            ?? throw new InvalidOperationException("The configuration path has no directory.");
-        Directory.CreateDirectory(directory);
-
-        var temporaryPath = $"{FilePath}.{Guid.NewGuid():N}.tmp";
-        try
-        {
-            await using (var stream = File.Create(temporaryPath))
-            {
-                await JsonSerializer.SerializeAsync(stream, settings, JsonOptions, cancellationToken);
-            }
-
-            File.Move(temporaryPath, FilePath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
-    }
+        CancellationToken cancellationToken = default) =>
+        JsonFile.WriteAsync(FilePath, settings, JsonOptions, cancellationToken);
 
     private static JsonSerializerOptions CreateJsonOptions()
     {

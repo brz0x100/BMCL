@@ -164,7 +164,7 @@
                                           Foreground="{DynamicResource OnSurfaceVariant}" />
                       <TextBlock Grid.Column="1"
                                  Classes="LabelSmall"
-                                 Text="{Binding VersionId, StringFormat='Vanilla {0}'}"
+                                 Text="{Binding VersionId, StringFormat='Version {0}'}"
                                  Foreground="{DynamicResource OnSurfaceVariant}"
                                  TextTrimming="CharacterEllipsis"
                                  TextWrapping="NoWrap"

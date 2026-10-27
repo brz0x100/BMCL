@@ -9,7 +9,10 @@ using BMCL.Launch.Java;
 
 namespace BMCL.Desktop.Services;
 
-public sealed record GameLaunchResult(string JavaPath, int ProcessId);
+public sealed record GameLaunchResult(
+    string JavaPath,
+    int ProcessId,
+    bool LastPlayedUpdated);
 
 public sealed class GameLaunchService
 {
@@ -53,7 +56,7 @@ public sealed class GameLaunchService
             cancellationToken: cancellationToken);
 
         var clientJarPath = Path.Combine(
-            _paths.Versions,
+            _paths.VersionsDirectory,
             instance.VersionId,
             $"{instance.VersionId}.jar");
         if (!File.Exists(clientJarPath))
@@ -70,7 +73,7 @@ public sealed class GameLaunchService
         NativesExtractor.Extract(
             version,
             RuleContext.Current,
-            _paths.Libraries,
+            _paths.LibrariesDirectory,
             nativesDirectory);
 
         var loggingPath = ResolveLoggingPath(version);
@@ -79,8 +82,8 @@ public sealed class GameLaunchService
         {
             Account = account,
             GameDirectory = gameDirectory,
-            AssetsDirectory = _paths.Assets,
-            LibrariesDirectory = _paths.Libraries,
+            AssetsDirectory = _paths.AssetsDirectory,
+            LibrariesDirectory = _paths.LibrariesDirectory,
             NativesDirectory = nativesDirectory,
             ClientJarPath = clientJarPath,
             JavaPath = javaPath,
@@ -107,11 +110,19 @@ public sealed class GameLaunchService
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("The game process could not be started.");
 
-        await _instances.SaveAsync(
-            instance with { LastPlayedAt = DateTimeOffset.UtcNow },
-            cancellationToken);
+        var lastPlayedUpdated = true;
+        try
+        {
+            await _instances.SaveAsync(
+                instance with { LastPlayedAt = DateTimeOffset.UtcNow },
+                CancellationToken.None);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            lastPlayedUpdated = false;
+        }
 
-        return new GameLaunchResult(javaPath, process.Id);
+        return new GameLaunchResult(javaPath, process.Id, lastPlayedUpdated);
     }
 
     private async Task<string> ResolveJavaAsync(
@@ -140,7 +151,7 @@ public sealed class GameLaunchService
 
         var requiredMajor = version.JavaVersion?.MajorVersion ?? 8;
         var runtimes = await _javaLocator.FindAsync(cancellationToken);
-        var runtime = runtimes.FirstOrDefault(candidate => candidate.MajorVersion >= requiredMajor);
+        var runtime = JavaRuntimeSelector.SelectCompatible(runtimes, requiredMajor);
         if (runtime is null)
         {
             throw new InvalidOperationException(
@@ -158,7 +169,7 @@ public sealed class GameLaunchService
             return null;
         }
 
-        var path = Path.Combine(_paths.Assets, "log_configs", id);
+        var path = Path.Combine(_paths.AssetsDirectory, "log_configs", id);
         return File.Exists(path) ? path : null;
     }
 }

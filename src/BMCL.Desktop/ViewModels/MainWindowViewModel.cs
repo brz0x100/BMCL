@@ -35,7 +35,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         SettingsPage = settingsPage;
         AccountPage = accountPage;
 
-        _currentPage = homePage;
         _selectedPageIndex = 0;
 
         _accounts.Changed += (_, _) =>
@@ -91,10 +90,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         ? "Expand sidebar"
         : "Collapse sidebar";
 
-    public bool IsHomePage => CurrentPage == HomePage;
+    public ViewModelBase CurrentPage => SelectedPageIndex switch
+    {
+        1 => InstancesPage,
+        2 => DownloadsPage,
+        _ => HomePage,
+    };
 
-    [ObservableProperty]
-    private ViewModelBase _currentPage;
+    public bool IsHomePage => CurrentPage == HomePage;
 
     [ObservableProperty]
     private int _selectedPageIndex;
@@ -150,11 +153,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenInstances()
-    {
-        SelectedPageIndex = 1;
-        CurrentPage = InstancesPage;
-    }
+    private void OpenInstances() => SelectedPageIndex = 1;
 
     [RelayCommand]
     private async Task LaunchGameAsync(CancellationToken cancellationToken)
@@ -170,7 +169,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         try
         {
             var result = await _gameLauncher.LaunchAsync(instance, cancellationToken);
-            Status = $"Launched {instance.Name} with {Path.GetFileName(result.JavaPath)}.";
+            Status = result.LastPlayedUpdated
+                ? $"Launched {instance.Name} with {Path.GetFileName(result.JavaPath)}."
+                : $"Launched {instance.Name}, but the last played time could not be saved.";
         }
         catch (OperationCanceledException)
         {
@@ -186,22 +187,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    partial void OnCurrentPageChanged(ViewModelBase value)
+    partial void OnSelectedPageIndexChanged(int value)
     {
+        OnPropertyChanged(nameof(CurrentPage));
         OnPropertyChanged(nameof(IsHomePage));
         OnPropertyChanged(nameof(IsRightPanelVisible));
         OnPropertyChanged(nameof(IsRightPanelToggleVisible));
-    }
-
-    partial void OnSelectedPageIndexChanged(int value)
-    {
-        CurrentPage = value switch
-        {
-            0 => HomePage,
-            1 => InstancesPage,
-            2 => DownloadsPage,
-            _ => CurrentPage,
-        };
     }
 
     partial void OnIsLaunchingChanged(bool value) => NotifyLaunchState();

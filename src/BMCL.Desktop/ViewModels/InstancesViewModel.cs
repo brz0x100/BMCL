@@ -12,6 +12,7 @@ public sealed partial class InstancesViewModel : ViewModelBase
     private readonly InstanceStore _store;
     private readonly LauncherSettingsService _settings;
     private readonly List<Instance> _allInstances = [];
+    private bool _isApplyingView;
 
     public InstancesViewModel(InstanceStore store, LauncherSettingsService settings)
     {
@@ -101,6 +102,11 @@ public sealed partial class InstancesViewModel : ViewModelBase
     {
         SearchText = "";
         ApplyView(id);
+
+        if (SelectedInstance is { } selected && _settings.IsLoaded)
+        {
+            _ = PersistSelectionAsync(selected.Id);
+        }
     }
 
     public InstanceSettingsViewModel CreateSettingsViewModel(Instance instance) =>
@@ -121,7 +127,7 @@ public sealed partial class InstancesViewModel : ViewModelBase
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(DisplayVersion));
 
-        if (value is not null && _settings.IsLoaded)
+        if (value is not null && !_isApplyingView && _settings.IsLoaded)
         {
             _ = PersistSelectionAsync(value.Id);
         }
@@ -179,11 +185,19 @@ public sealed partial class InstancesViewModel : ViewModelBase
         OnPropertyChanged(nameof(EmptyStateTitle));
         OnPropertyChanged(nameof(EmptyStateMessage));
 
-        SelectedInstance = Instances.FirstOrDefault(
-                               instance => string.Equals(
-                                   instance.Id,
-                                   preferredSelection,
-                                   StringComparison.Ordinal))
-                           ?? Instances.FirstOrDefault();
+        _isApplyingView = true;
+        try
+        {
+            SelectedInstance = Instances.FirstOrDefault(
+                                   instance => string.Equals(
+                                       instance.Id,
+                                       preferredSelection,
+                                       StringComparison.Ordinal))
+                               ?? Instances.FirstOrDefault();
+        }
+        finally
+        {
+            _isApplyingView = false;
+        }
     }
 }

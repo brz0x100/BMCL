@@ -7,35 +7,42 @@ namespace BMCL.Desktop.ViewModels;
 
 public sealed partial class SettingsViewModel : ViewModelBase
 {
+    private const int GeneralSectionIndex = 1;
+    private const int AppearanceSectionIndex = 2;
+    private const int DownloadSectionIndex = 3;
+    private const int GlobalSettingsSectionIndex = 6;
+    private const int JavaSectionIndex = 7;
+    private const int AboutSectionIndex = 10;
+
     private readonly LauncherSettingsService _settings;
 
     public SettingsViewModel(LauncherSettingsService settings, LauncherPaths paths)
     {
         _settings = settings;
-        RootDirectory = paths.Root;
-        ConfigFile = paths.ConfigFile;
+        RootDirectory = paths.RootDirectory;
+        ConfigFilePath = paths.ConfigFilePath;
         LoadFromSettings(settings.Settings);
         settings.Changed += (_, _) => LoadFromSettings(settings.Settings);
     }
 
     public string RootDirectory { get; }
 
-    public string ConfigFile { get; }
+    public string ConfigFilePath { get; }
 
-    public bool IsGeneralSection => SelectedNavigationIndex == 1;
+    public bool IsGeneralSection => SelectedNavigationIndex == GeneralSectionIndex;
 
-    public bool IsAppearanceSection => SelectedNavigationIndex == 2;
+    public bool IsAppearanceSection => SelectedNavigationIndex == AppearanceSectionIndex;
 
-    public bool IsDownloadSection => SelectedNavigationIndex == 3;
+    public bool IsDownloadSection => SelectedNavigationIndex == DownloadSectionIndex;
 
-    public bool IsGlobalSettingsSection => SelectedNavigationIndex == 6;
+    public bool IsGlobalSettingsSection => SelectedNavigationIndex == GlobalSettingsSectionIndex;
 
-    public bool IsJavaSection => SelectedNavigationIndex == 7;
+    public bool IsJavaSection => SelectedNavigationIndex == JavaSectionIndex;
 
-    public bool IsAboutSection => SelectedNavigationIndex == 10;
+    public bool IsAboutSection => SelectedNavigationIndex == AboutSectionIndex;
 
     [ObservableProperty]
-    private int _selectedNavigationIndex = 1;
+    private int _selectedNavigationIndex = GeneralSectionIndex;
 
     [ObservableProperty]
     private string? _javaPath;
@@ -114,6 +121,10 @@ public sealed partial class SettingsViewModel : ViewModelBase
         {
             await _settings.SaveAsync(updated, cancellationToken);
             Status = "Settings saved.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Saving settings was canceled.";
         }
         catch (Exception exception)
         {

@@ -60,6 +60,10 @@ public partial class DownloadsView : UserControl
             DialogSizing.ApplySettings(window, owner);
             await window.ShowDialog(owner);
         }
+        catch (Exception exception)
+        {
+            viewModel.Status = $"Failed to open the install dialog: {exception.Message}";
+        }
         finally
         {
             if (shell is not null)

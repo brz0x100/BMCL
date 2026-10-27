@@ -56,6 +56,10 @@ public sealed partial class AccountViewModel : ViewModelBase
             SelectedAccount = _accounts.SelectedAccount;
             Status = "Offline account added and selected.";
         }
+        catch (OperationCanceledException)
+        {
+            Status = "Canceled.";
+        }
         catch (Exception exception)
         {
             Status = exception.Message;
@@ -75,6 +79,10 @@ public sealed partial class AccountViewModel : ViewModelBase
         {
             await _accounts.SelectAccountAsync(SelectedAccount, cancellationToken);
             Status = $"Using {SelectedAccount.Name}.";
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "Canceled.";
         }
         catch (Exception exception)
         {

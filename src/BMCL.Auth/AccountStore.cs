@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BMCL.Core.IO;
 
 namespace BMCL.Auth;
 
@@ -21,53 +22,14 @@ public sealed class AccountStore
 
     public string FilePath { get; }
 
-    public async Task<AccountStoreState> LoadAsync(CancellationToken cancellationToken = default)
-    {
-        if (!File.Exists(FilePath))
-        {
-            return new AccountStoreState();
-        }
+    public async Task<AccountStoreState> LoadAsync(CancellationToken cancellationToken = default) =>
+        await JsonFile.ReadAsync<AccountStoreState>(FilePath, JsonOptions, cancellationToken)
+        ?? new AccountStoreState();
 
-        await using var stream = File.OpenRead(FilePath);
-        try
-        {
-            return await JsonSerializer.DeserializeAsync<AccountStoreState>(
-                stream,
-                JsonOptions,
-                cancellationToken) ?? new AccountStoreState();
-        }
-        catch (JsonException exception)
-        {
-            throw new InvalidDataException($"The account file is invalid: {FilePath}", exception);
-        }
-    }
-
-    public async Task SaveAsync(
+    public Task SaveAsync(
         AccountStoreState state,
-        CancellationToken cancellationToken = default)
-    {
-        var directory = Path.GetDirectoryName(FilePath)
-            ?? throw new InvalidOperationException("The account path has no directory.");
-        Directory.CreateDirectory(directory);
-
-        var temporaryPath = $"{FilePath}.{Guid.NewGuid():N}.tmp";
-        try
-        {
-            await using (var stream = File.Create(temporaryPath))
-            {
-                await JsonSerializer.SerializeAsync(stream, state, JsonOptions, cancellationToken);
-            }
-
-            File.Move(temporaryPath, FilePath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
-    }
+        CancellationToken cancellationToken = default) =>
+        JsonFile.WriteAsync(FilePath, state, JsonOptions, cancellationToken);
 
     private static JsonSerializerOptions CreateJsonOptions()
     {

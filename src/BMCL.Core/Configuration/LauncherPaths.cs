@@ -11,42 +11,42 @@ public sealed class LauncherPaths
             throw new ArgumentException("The launcher root directory is required.", nameof(root));
         }
 
-        Root = Path.GetFullPath(root);
-        ConfigRoot = Path.GetFullPath(configRoot ?? root);
+        RootDirectory = Path.GetFullPath(root);
+        ConfigDirectory = Path.GetFullPath(configRoot ?? root);
     }
 
-    public string Root { get; }
+    public string RootDirectory { get; }
 
-    public string ConfigRoot { get; }
+    public string ConfigDirectory { get; }
 
-    public string ConfigFile => Path.Combine(ConfigRoot, "config.json");
+    public string ConfigFilePath => Path.Combine(ConfigDirectory, "config.json");
 
-    public string MinecraftRoot => Path.Combine(Root, ".minecraft");
+    public string MinecraftDirectory => Path.Combine(RootDirectory, ".minecraft");
 
-    public string Versions => Path.Combine(MinecraftRoot, "versions");
+    public string VersionsDirectory => Path.Combine(MinecraftDirectory, "versions");
 
-    public string Libraries => Path.Combine(MinecraftRoot, "libraries");
+    public string LibrariesDirectory => Path.Combine(MinecraftDirectory, "libraries");
 
-    public string Assets => Path.Combine(MinecraftRoot, "assets");
+    public string AssetsDirectory => Path.Combine(MinecraftDirectory, "assets");
 
-    public string AssetIndexes => Path.Combine(Assets, "indexes");
+    public string AssetIndexesDirectory => Path.Combine(AssetsDirectory, "indexes");
 
-    public string AssetObjects => Path.Combine(Assets, "objects");
+    public string AssetObjectsDirectory => Path.Combine(AssetsDirectory, "objects");
 
-    public string JavaRuntimes => Path.Combine(Root, "java");
+    public string JavaRuntimesDirectory => Path.Combine(RootDirectory, "java");
 
-    public string Logs => Path.Combine(Root, "logs");
+    public string LogsDirectory => Path.Combine(RootDirectory, "logs");
 
     public string GetInstanceDirectory(Instance instance) =>
-        instance.Isolated ? Path.Combine(Versions, instance.Id) : MinecraftRoot;
+        instance.Isolated ? Path.Combine(VersionsDirectory, instance.Id) : MinecraftDirectory;
 
     public static LauncherPaths CreateDefault()
     {
-        var root = GetDefaultRoot();
+        var root = GetDefaultRootDirectory();
         return new LauncherPaths(root, root);
     }
 
-    public static string GetDefaultRoot()
+    public static string GetDefaultRootDirectory()
     {
         if (OperatingSystem.IsWindows())
         {
@@ -80,16 +80,16 @@ public sealed class LauncherPaths
     {
         foreach (var directory in new[]
                  {
-                     Root,
-                     ConfigRoot,
-                     MinecraftRoot,
-                     Versions,
-                     Libraries,
-                     Assets,
-                     AssetIndexes,
-                     AssetObjects,
-                     JavaRuntimes,
-                     Logs,
+                     RootDirectory,
+                     ConfigDirectory,
+                     MinecraftDirectory,
+                     VersionsDirectory,
+                     LibrariesDirectory,
+                     AssetsDirectory,
+                     AssetIndexesDirectory,
+                     AssetObjectsDirectory,
+                     JavaRuntimesDirectory,
+                     LogsDirectory,
                  })
         {
             Directory.CreateDirectory(directory);

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BMCL.Core.Configuration;
 using BMCL.Core.Instances;
+using BMCL.Core.IO;
 using BMCL.Core.Minecraft;
 using BMCL.Download;
 using BMCL.Launch;
@@ -50,50 +51,65 @@ public sealed class MinecraftInstaller
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(versionId);
+        PathSafety.ValidateFileName(versionId, nameof(versionId), "version id");
 
-        progress?.Report(new InstallProgress("Resolving version"));
-        var version = await _versions.GetVersionAsync(versionId, cancellationToken: cancellationToken);
-        var context = RuleContext.Current;
-        var isolated = ShouldIsolate(isolationStrategy, version, versionId);
+        var versionDirectory = Path.Combine(_paths.VersionsDirectory, versionId);
+        var markerPath = Path.Combine(versionDirectory, InstanceStore.InstallationMarkerFileName);
+        Directory.CreateDirectory(versionDirectory);
+        await File.WriteAllTextAsync(markerPath, string.Empty, cancellationToken);
 
-        Directory.CreateDirectory(_paths.Versions);
-        Directory.CreateDirectory(_paths.Libraries);
-        Directory.CreateDirectory(_paths.Assets);
-
-        var downloads = CreateDownloadPlan(version, versionId, out var assetIndexPath, out var loggingPath);
-
-        await DownloadAsync(downloads, "Downloading game files", progress, cancellationToken);
-
-        await DownloadAssetsAsync(
-            version,
-            assetIndexPath,
-            progress,
-            cancellationToken);
-
-        if (loggingPath is not null && !File.Exists(loggingPath))
+        var completed = false;
+        try
         {
-            throw new IOException("The logging configuration was not downloaded.");
+            progress?.Report(new InstallProgress("Resolving version"));
+            var version = await _versions.GetVersionAsync(versionId, cancellationToken: cancellationToken);
+            var context = RuleContext.Current;
+            var isolated = ShouldIsolate(isolationStrategy, version, versionId);
+
+            Directory.CreateDirectory(_paths.LibrariesDirectory);
+            Directory.CreateDirectory(_paths.AssetsDirectory);
+
+            var downloads = CreateDownloadPlan(version, versionId, out var assetIndexPath, out var loggingPath);
+
+            await DownloadAsync(downloads, "Downloading game files", progress, cancellationToken);
+
+            await DownloadAssetsAsync(
+                version,
+                assetIndexPath,
+                progress,
+                cancellationToken);
+
+            if (loggingPath is not null && !File.Exists(loggingPath))
+            {
+                throw new IOException("The logging configuration was not downloaded.");
+            }
+
+            var instanceDirectory = isolated ? versionDirectory : _paths.MinecraftDirectory;
+            Directory.CreateDirectory(instanceDirectory);
+            var nativesDirectory = Path.Combine(instanceDirectory, "natives");
+            progress?.Report(new InstallProgress("Extracting native libraries"));
+            NativesExtractor.Extract(
+                version,
+                context,
+                _paths.LibrariesDirectory,
+                nativesDirectory);
+
+            var instance = await CreateInstanceAsync(
+                versionId,
+                instanceName,
+                isolated,
+                cancellationToken);
+            progress?.Report(new InstallProgress("Installation complete", 1, 1));
+            completed = true;
+            return instance;
         }
-
-        var instanceDirectory = isolated
-            ? Path.Combine(_paths.Versions, versionId)
-            : _paths.MinecraftRoot;
-        Directory.CreateDirectory(instanceDirectory);
-        var nativesDirectory = Path.Combine(instanceDirectory, "natives");
-        progress?.Report(new InstallProgress("Extracting native libraries"));
-        NativesExtractor.Extract(
-            version,
-            context,
-            _paths.Libraries,
-            nativesDirectory);
-
-        var instance = await CreateInstanceAsync(
-            versionId,
-            instanceName,
-            isolated,
-            cancellationToken);
-        progress?.Report(new InstallProgress("Installation complete", 1, 1));
-        return instance;
+        finally
+        {
+            if (completed)
+            {
+                TryDelete(markerPath);
+            }
+        }
     }
 
     private List<DownloadItem> CreateDownloadPlan(
@@ -109,7 +125,7 @@ public sealed class MinecraftInstaller
         AddArtifact(
             result,
             version.Downloads?.Client,
-            Path.Combine(_paths.Versions, versionId, $"{versionId}.jar"));
+            Path.Combine(_paths.VersionsDirectory, versionId, $"{versionId}.jar"));
 
         var context = RuleContext.Current;
         foreach (var library in version.Libraries)
@@ -119,37 +135,14 @@ public sealed class MinecraftInstaller
                 continue;
             }
 
-            var artifact = library.Downloads?.Artifact;
-            if (artifact is not null)
+            if (LibraryFileResolver.ResolveArtifact(library) is { } artifactFile)
             {
-                var relativePath = artifact.Path ?? MavenPath.ToRelativePath(library.Name);
-                if (relativePath is not null)
-                {
-                    AddArtifact(
-                        result,
-                        artifact,
-                        Path.Combine(
-                            _paths.Libraries,
-                            relativePath.Replace('/', Path.DirectorySeparatorChar)));
-                }
+                AddLibraryFile(result, artifactFile);
             }
 
-            if (library.Natives is null ||
-                !library.Natives.TryGetValue(context.OsName, out var classifier))
+            if (LibraryFileResolver.ResolveNative(library, context.OsName) is { } nativeFile)
             {
-                continue;
-            }
-
-            var nativeArtifact = library.Downloads?.Classifiers?.GetValueOrDefault(classifier);
-            var nativeRelativePath = nativeArtifact?.Path ?? MavenPath.ToRelativePath(library.Name, classifier);
-            if (nativeArtifact is not null && nativeRelativePath is not null)
-            {
-                AddArtifact(
-                    result,
-                    nativeArtifact,
-                    Path.Combine(
-                        _paths.Libraries,
-                        nativeRelativePath.Replace('/', Path.DirectorySeparatorChar)));
+                AddLibraryFile(result, nativeFile);
             }
         }
 
@@ -159,7 +152,8 @@ public sealed class MinecraftInstaller
             var id = string.IsNullOrWhiteSpace(assetIndex.Id)
                 ? version.Assets ?? "legacy"
                 : assetIndex.Id;
-            assetIndexPath = Path.Combine(_paths.Assets, "indexes", $"{id}.json");
+            PathSafety.ValidateFileName(id, nameof(assetIndex), "asset index id");
+            assetIndexPath = Path.Combine(_paths.AssetIndexesDirectory, $"{id}.json");
             AddDownload(
                 result,
                 new DownloadItem(
@@ -172,7 +166,8 @@ public sealed class MinecraftInstaller
         if (version.Logging?.Client?.File is { } loggingFile &&
             !string.IsNullOrWhiteSpace(loggingFile.Url))
         {
-            loggingPath = Path.Combine(_paths.Assets, "log_configs", loggingFile.Id);
+            PathSafety.ValidateFileName(loggingFile.Id, nameof(loggingFile), "logging configuration id");
+            loggingPath = Path.Combine(_paths.AssetsDirectory, "log_configs", loggingFile.Id);
             AddDownload(
                 result,
                 new DownloadItem(
@@ -196,14 +191,10 @@ public sealed class MinecraftInstaller
             return;
         }
 
-        AssetIndexDocument? index;
-        await using (var stream = File.OpenRead(assetIndexPath))
-        {
-            index = await JsonSerializer.DeserializeAsync<AssetIndexDocument>(
-                stream,
-                AssetIndexJsonOptions,
-                cancellationToken);
-        }
+        var index = await JsonFile.ReadAsync<AssetIndexDocument>(
+            assetIndexPath,
+            AssetIndexJsonOptions,
+            cancellationToken);
 
         if (index is null)
         {
@@ -213,13 +204,13 @@ public sealed class MinecraftInstaller
         var items = new Dictionary<string, DownloadItem>(StringComparer.Ordinal);
         foreach (var (_, asset) in index.Objects)
         {
-            if (asset.Hash.Length < 2)
+            if (asset.Hash.Length != 40 || !asset.Hash.All(char.IsAsciiHexDigit))
             {
                 continue;
             }
 
             var prefix = asset.Hash[..2];
-            var destination = Path.Combine(_paths.Assets, "objects", prefix, asset.Hash);
+            var destination = Path.Combine(_paths.AssetObjectsDirectory, prefix, asset.Hash);
             if (items.ContainsKey(destination))
             {
                 continue;
@@ -238,11 +229,11 @@ public sealed class MinecraftInstaller
         bool isolated,
         CancellationToken cancellationToken)
     {
-        var name = string.IsNullOrWhiteSpace(instanceName)
-            ? versionId
-            : instanceName.Trim();
         var existing = (await _instances.LoadAsync(cancellationToken))
             .FirstOrDefault(instance => string.Equals(instance.Id, versionId, StringComparison.Ordinal));
+        var name = string.IsNullOrWhiteSpace(instanceName)
+            ? existing?.Name ?? versionId
+            : instanceName.Trim();
 
         var instance = existing is null
             ? new Instance
@@ -250,6 +241,7 @@ public sealed class MinecraftInstaller
                 Id = versionId,
                 Name = name,
                 VersionId = versionId,
+                Isolated = isolated,
             }
             : existing with
             {
@@ -258,7 +250,7 @@ public sealed class MinecraftInstaller
                 Isolated = isolated,
             };
 
-        Directory.CreateDirectory(Path.Combine(_paths.Versions, instance.Id));
+        Directory.CreateDirectory(Path.Combine(_paths.VersionsDirectory, instance.Id));
         await _instances.SaveAsync(instance, cancellationToken);
         return instance;
     }
@@ -267,11 +259,11 @@ public sealed class MinecraftInstaller
         IsolationStrategy strategy,
         VersionDetail version,
         string versionId) => strategy switch
-    {
-        IsolationStrategy.Always => true,
-        IsolationStrategy.Never => false,
-        _ => IsModdedVersion(version, versionId),
-    };
+        {
+            IsolationStrategy.Always => true,
+            IsolationStrategy.Never => false,
+            _ => IsModdedVersion(version, versionId),
+        };
 
     private static bool IsModdedVersion(VersionDetail version, string versionId)
     {
@@ -319,6 +311,27 @@ public sealed class MinecraftInstaller
         await _downloads.DownloadAsync(items, downloadProgress, cancellationToken);
     }
 
+    private void AddLibraryFile(
+        IDictionary<string, DownloadItem> items,
+        LibraryFile file)
+    {
+        var destination = PathSafety.CombineUnderRoot(
+            _paths.LibrariesDirectory,
+            file.RelativePath);
+        var artifact = file.Artifact;
+        var url = artifact is { } download && !string.IsNullOrWhiteSpace(download.Url)
+            ? CreateUri(download.Url)
+            : new Uri(MinecraftEndpoints.LibraryBase, file.RelativePath);
+
+        AddDownload(
+            items,
+            new DownloadItem(
+                url,
+                destination,
+                artifact?.Sha1,
+                artifact?.Size));
+    }
+
     private static void AddArtifact(
         IDictionary<string, DownloadItem> items,
         DownloadArtifact? artifact,
@@ -353,5 +366,19 @@ public sealed class MinecraftInstaller
         }
 
         return uri;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 }

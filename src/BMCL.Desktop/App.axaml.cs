@@ -35,18 +35,20 @@ public partial class App : Application
         {
             Timeout = TimeSpan.FromMinutes(10),
         });
-        services.AddSingleton<IMirrorUrlMapper, IdentityMirrorUrlMapper>();
+        services.AddSingleton<LauncherSettingsStore>();
+        services.AddSingleton<LauncherSettingsService>();
+        services.AddSingleton<IMirrorUrlMapper, LauncherMirrorUrlMapper>();
         services.AddSingleton<IDownloadService>(provider => new HttpDownloadService(
             provider.GetRequiredService<HttpClient>(),
-            provider.GetRequiredService<IMirrorUrlMapper>()));
+            provider.GetRequiredService<IMirrorUrlMapper>(),
+            () => provider.GetRequiredService<LauncherSettingsService>()
+                .Settings.MaxConcurrentDownloads));
         services.AddSingleton<MinecraftVersionService>();
         services.AddSingleton<MinecraftInstaller>();
         services.AddSingleton<IJavaLocator, JavaLocator>();
         services.AddSingleton<LaunchCommandBuilder>();
         services.AddSingleton<GameLaunchService>();
-        services.AddSingleton<LauncherSettingsStore>();
-        services.AddSingleton<LauncherSettingsService>();
-        services.AddSingleton(new AccountStore(Path.Combine(paths.Root, "accounts.json")));
+        services.AddSingleton(new AccountStore(Path.Combine(paths.RootDirectory, "accounts.json")));
         services.AddSingleton<AccountManager>();
         services.AddSingleton<InstanceStore>();
         services.AddSingleton<HomeViewModel>();
